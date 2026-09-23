@@ -1,0 +1,55 @@
+import { defaultSensitivity } from "../GameSettings.js";
+import DomEventListener from "../../controls/ui/DomEventListener.js";
+import GameState from "./GameState.js";
+export default class GameStateManager {
+    state = GameState.MainMenu;
+    domEventListener;
+    inputReader;
+    gameSettings;
+    uiController;
+    constructor(inputReader, uiController, gameSettings, onSceneChange) {
+        this.inputReader = inputReader;
+        this.uiController = uiController;
+        this.gameSettings = gameSettings;
+        this.domEventListener = new DomEventListener({
+            onPlay: () => this.setState(GameState.PlayingMazdle),
+            onSettings: () => this.setState(GameState.Settings),
+            onBack: () => this.setState(GameState.MainMenu),
+            onSceneMenu: () => this.uiController.toggleScenesMenu(),
+            onSceneChange: onSceneChange,
+            onSensitivityChange: value => {
+                this.gameSettings.mouseSensitivity = value * (defaultSensitivity / 50);
+            }
+        });
+    }
+    update() {
+        this.updateState();
+    }
+    updateState() {
+        // update paused state
+        if (this.inputReader.pointerLockChanged && !this.inputReader.isPointerLocked) {
+            console.log("Setting state to main menu");
+            this.setState(GameState.MainMenu);
+        }
+    }
+    setState(newState) {
+        const oldState = this.state;
+        this.state = newState;
+        switch (newState) {
+            case GameState.MainMenu:
+                console.log("Main menu");
+                this.uiController.hideSettingsMenu();
+                this.uiController.showMainMenu();
+                break;
+            case GameState.Settings:
+                this.uiController.hideUiControls();
+                this.uiController.showSettingsMenu();
+                break;
+            case GameState.PlayingMazdle:
+                this.uiController.hideUiOverlay();
+                break;
+            default:
+                console.log("Not implemented state: " + newState.toLocaleString());
+        }
+    }
+}

@@ -1,0 +1,76 @@
+.ui-controls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.settings-button,
+.scenes-button {
+  font: inherit;
+  font-weight: bold;
+
+  color: #00ff66;
+  background: #0a0a0a;
+
+  border: 2px solid #00ff66;
+  padding: 8px 12px;
+
+  cursor: pointer;
+  width: 100%
+}
+
+.settings-button:hover,
+.scenes-button:hover {
+  color: #0a0a0a;
+  background: #00ff66;
+}
+
+
+/* Scene dropdown */
+
+.scene-selector {
+  position: relative;
+}
+
+.scenes-menu {
+  display: none;
+
+  margin-top: 4px;
+
+  background: #0a0a0a;
+  border: 2px solid #00ff66;
+}
+
+.scenes-menu.open {
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* Individual scenes */
+
+.scenes-menu button {
+  font: inherit;
+  text-align: left;
+
+  color: #00ff66;
+  background: transparent;
+
+  border: none;
+  padding: 8px;
+
+  cursor: pointer;
+}
+
+.scenes-menu button:hover,
+.scenes-menu button:focus-visible {
+  color: #0a0a0a;
+  background: #00ff66;
+
+  outline: none;
+}

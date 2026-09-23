@@ -1,0 +1,40 @@
+/* Settings is hidden initially */
+
+.settings-menu {
+  display: none;
+}
+
+
+/* Back button */
+
+.back-button {
+  font: inherit;
+  font-weight: bold;
+
+  color: #00ff66;
+  background: transparent;
+
+  border: 2px solid #00ff66;
+  padding: 10px 16px;
+
+  cursor: pointer;
+}
+
+.back-button:hover {
+  color: #0a0a0a;
+  background: #00ff66;
+}
+
+
+/* Slider */
+
+.settings-menu label {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-menu input[type="range"] {
+  accent-color: #00ff66;
+  cursor: pointer;
+}

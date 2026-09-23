@@ -1,0 +1,63 @@
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="ui.css">
+<link rel="stylesheet" href="settings-menu.css">
+<link rel="stylesheet" href="ui-controls.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<title>Dev</title>
+
+<canvas id="canvas" width="600" height="600"></canvas>
+
+<div class="ui-overlay">
+  <div class="ui-panel main-menu">
+    <h1 class="ui-title">the fungeon</h1>
+
+    <div class="ui-text">
+      <p>STATUS: ONLINE</p>
+      <p>OBJECTIVE: GET TO THE END</p>
+      <p>AWAITING PLAYER INPUT...</p>
+    </div>
+
+    <button class="play-button" type="button">
+      CLICK HERE TO PLAY!
+    </button>
+  </div>
+
+  <div class="ui-controls">
+
+    <button class="settings-button" type="button">
+      [ SETTINGS ]
+    </button>
+
+    <div class="scene-selector">
+
+      <button class="scenes-button" type="button">
+        [ RANDOM ]
+      </button>
+
+      <div class="scenes-menu">
+        <button id="maze-scene" data-scene="maze">> MAZE</button>
+        <button id="rabbit-scene" data-scene="rabbit">> RABBIT</button>
+      </div>
+
+    </div>
+
+  </div>
+    
+  <div class="ui-panel settings-menu">
+    <h1 class="ui-title">settings</h1>
+
+    <div class="ui-text">
+      <label>
+        MOUSE SENSITIVITY
+        <input class="mouse-sensitivity-input" type="range" min="1" max="100" value="50">
+      </label>
+    </div>
+
+    <button class="back-button" type="button">
+      &lt; BACK
+    </button>
+  </div>
+</div>
+
+<script type="module" src="js/main/script.js"></script> 
+
