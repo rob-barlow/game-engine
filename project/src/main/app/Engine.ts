@@ -1,7 +1,6 @@
 import { Controller } from "../controls/in-game/controllers/Controller.js";
 import InputReader from "../controls/in-game/InputReader.js";
 import { Intent } from "../maths/Intent.js";
-import { CanvasRenderer } from "../rendering/CanvasRenderer.js";
 import { Scene } from "../scene/Scene.js";
 import GameSettings from "./GameSettings.js";
 import GameState from "./state/GameState.js";
@@ -11,9 +10,12 @@ import Scenes from "./scenes/Scenes.js";
 import { createMazeScene } from "./scenes/MazeScene/MazeScene.js";
 import { createRabbitScene } from "./scenes/RabbitScene/RabbitScene.js";
 import RendererType from "../utils/rendererTypes.js";
+import { Renderer } from "../rendering/Renderer.js";
+import { CpuRenderer } from "../rendering/CpuRenderer.js";
+import { GpuRenderer } from "../rendering/GpuRenderer.js";
 
 export class Engine{
-    renderer: CanvasRenderer;
+    renderer: Renderer = new CpuRenderer();
     scene: Scene;
     controllers: Controller[] = [];
 
@@ -25,8 +27,7 @@ export class Engine{
     gameSettings: GameSettings = new GameSettings()
     uiController: UiController = new UiController()
 
-    constructor(renderer: CanvasRenderer, initialScene: Scene, controllers: Controller[]){
-        this.renderer = renderer;
+    constructor(initialScene: Scene, controllers: Controller[]){
         this.scene = initialScene;
         this.controllers = controllers
 
@@ -121,11 +122,11 @@ export class Engine{
     changeRenderer = (rendererType: RendererType) => {
         switch (rendererType) {
             case RendererType.CPU:
+                this.renderer = new CpuRenderer();
                 break;
             case RendererType.GPU:
+                this.renderer = new GpuRenderer();
                 break;
         }
-
-        this.uiController.highlightRenderer(rendererType);
     }
 }

@@ -18,16 +18,16 @@ export default class DomEventListener {
         const mouseSensitivityRange = document.querySelector(".mouse-sensitivity-input") as HTMLElement;
         const toggleRendererButton = document.querySelector(".renderer-button") as HTMLElement;
 
+        playButton.addEventListener("click", () => {
+            params.onPlay();
+        });
+
         settingsButton.addEventListener("click", () => {
             params.onSettings()
         });
 
         backButton.addEventListener("click", () => { 
             params.onBack()
-        });
-
-        playButton.addEventListener("click", () => {
-            params.onPlay()
         });
 
         toggleRendererButton.addEventListener("click", () => {

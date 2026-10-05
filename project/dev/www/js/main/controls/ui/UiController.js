@@ -70,4 +70,10 @@ export default class UiController {
             selectedOption.classList.add("selected");
         }
     }
+    showCanvas(rendererType) {
+        const cpuCanvas = document.getElementById("cpu-canvas");
+        const gpuCanvas = document.getElementById("gpu-canvas");
+        cpuCanvas.style.display = rendererType === RendererType.CPU ? "block" : "none";
+        gpuCanvas.style.display = rendererType === RendererType.GPU ? "block" : "none";
+    }
 }

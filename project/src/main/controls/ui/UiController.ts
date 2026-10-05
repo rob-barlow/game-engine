@@ -92,4 +92,12 @@ export default class UiController {
             selectedOption.classList.add("selected");
         }
     }
+
+    showCanvas(rendererType: RendererType){
+        const cpuCanvas = document.getElementById("cpu-canvas") as HTMLCanvasElement;
+        const gpuCanvas = document.getElementById("gpu-canvas") as HTMLCanvasElement;
+
+        cpuCanvas.style.display = rendererType === RendererType.CPU ? "block" : "none";
+        gpuCanvas.style.display = rendererType === RendererType.GPU ? "block" : "none";
+    }
 }

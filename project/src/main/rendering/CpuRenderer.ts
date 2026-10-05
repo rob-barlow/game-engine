@@ -6,7 +6,7 @@ import { Projection } from "./Projection.js";
 import { Renderer } from "./Renderer.js";
 import { ScreenBuffer } from "./ScreenBuffer.js";
 
-export class CanvasRenderer implements Renderer {
+export class CpuRenderer implements Renderer {
     screenBuffer: ScreenBuffer
 
     ctx: CanvasRenderingContext2D;
@@ -15,7 +15,7 @@ export class CanvasRenderer implements Renderer {
     viewportMatrix: Matrix4
 
     constructor(){
-        const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+        const canvas = document.getElementById("cpu-canvas") as HTMLCanvasElement;
         // calculate and set height and width of canvas here
         // should be a multiple of 64
         // Math.floor(window.innerHeight / 64) * 64

@@ -1,14 +1,14 @@
 import { Transform } from "../maths/index.js";
 import { Projection } from "./Projection.js";
 import { ScreenBuffer } from "./ScreenBuffer.js";
-export class CanvasRenderer {
+export class CpuRenderer {
     screenBuffer;
     ctx;
     size;
     projectionMatrix;
     viewportMatrix;
     constructor() {
-        const canvas = document.getElementById("canvas");
+        const canvas = document.getElementById("cpu-canvas");
         // calculate and set height and width of canvas here
         // should be a multiple of 64
         // Math.floor(window.innerHeight / 64) * 64

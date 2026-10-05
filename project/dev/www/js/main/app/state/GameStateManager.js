@@ -23,22 +23,20 @@ export default class GameStateManager {
                 this.gameSettings.mouseSensitivity = value * (defaultSensitivity / 50);
             },
             onRendererToggle: () => {
-                this.currentRendererType = this.currentRendererType === RendererType.CPU ? RendererType.GPU : RendererType.CPU;
+                this.currentRendererType = this.currentRendererType == RendererType.CPU ? RendererType.GPU : RendererType.CPU;
                 changeEngineRenderer(this.currentRendererType);
+                this.uiController.showCanvas(this.currentRendererType);
+                this.uiController.highlightRenderer(this.currentRendererType);
             }
         });
     }
     update() {
-        this.updateState();
-    }
-    updateState() {
-        // update paused state
         if (this.inputReader.pointerLockChanged && !this.inputReader.isPointerLocked) {
             console.log("Setting state to main menu");
             this.setState(GameState.MainMenu);
         }
     }
-    setState(newState) {
+    async setState(newState) {
         const oldState = this.state;
         this.state = newState;
         switch (newState) {
@@ -52,7 +50,15 @@ export default class GameStateManager {
                 this.uiController.showSettingsMenu();
                 break;
             case GameState.PlayingMazdle:
-                this.uiController.hideUiOverlay();
+                await document.body.requestPointerLock();
+                if (document.pointerLockElement != null) {
+                    console.log("Playing Mazdle");
+                    this.uiController.hideUiOverlay();
+                }
+                else {
+                    console.log("Failed");
+                    this.state = oldState;
+                }
                 break;
             default:
                 console.log("Not implemented state: " + newState.toLocaleString());
