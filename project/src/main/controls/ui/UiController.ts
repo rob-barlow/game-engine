@@ -1,3 +1,6 @@
+import Scenes from "../../app/scenes/Scenes.js";
+import RendererType from "../../utils/rendererTypes.js";
+
 export default class UiController {
     showMainMenu(){
         const uiOverlay = document.querySelector(".ui-overlay") as HTMLElement;
@@ -53,5 +56,40 @@ export default class UiController {
         const uiControls = document.querySelector(".ui-controls") as HTMLElement;
 
         uiControls.style.display = "none";
+    }
+
+    setScene(scene: Scenes){
+        const sceneString: string = Scenes[scene].toLowerCase();
+
+        console.log(`Setting scene to ${sceneString}`)
+        const sceneOptions = document.querySelectorAll(".scene-option");
+        sceneOptions.forEach(option => {
+            option.classList.remove("selected");
+        })
+
+        const selectedOption = document.querySelector(`.scene-option[data-scene="${sceneString}"]`);
+        if (selectedOption) {
+            selectedOption.classList.add("selected");
+        }
+    }
+
+    highlightRenderer(rendererType: RendererType){
+        const rendererString: string = RendererType[rendererType].toLowerCase();
+
+        const rendererOptions = document.querySelectorAll(".renderer-option");
+        rendererOptions.forEach(option => {
+
+            if (option.classList.contains("selected")) {
+                option.classList.remove("selected");
+            }
+            else {
+                option.classList.add("selected");
+            }
+        })
+
+        const selectedOption = document.querySelector(`.renderer-option[data-renderer="${rendererString}"]`);
+        if (selectedOption) {
+            selectedOption.classList.add("selected");
+        }
     }
 }

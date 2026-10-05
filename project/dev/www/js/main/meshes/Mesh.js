@@ -1,8 +1,8 @@
 export default class Mesh {
     triangles;
     colour;
-    constructor(vertices, colour) {
-        this.triangles = vertices;
+    constructor(triangles, colour) {
+        this.triangles = triangles;
         this.colour = colour;
     }
 }

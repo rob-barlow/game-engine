@@ -1,3 +1,8 @@
+.selected {
+  color: #0a0a0a!important;
+  background: #00be4c!important;
+}
+
 .ui-controls {
   position: absolute;
   top: 20px;
@@ -9,23 +14,37 @@
   gap: 8px;
 }
 
-.settings-button,
-.scenes-button {
+ /* <div class="renderer-selector">
+
+      <button class="renderer-button" type="button">
+        [ TOGGLE RENDERER ]
+      </button>
+
+      <div class="renderer-menu">
+        <p class="renderer-option selected" id="webgl-renderer" data-renderer="webgl">> GPU</p>
+        <p class="renderer-option" id="canvas-renderer" data-renderer="canvas">> CPU</p>
+      </div>
+     */
+     
+     .settings-button,
+.scenes-button,
+.renderer-button {
   font: inherit;
   font-weight: bold;
 
   color: #00ff66;
   background: #0a0a0a;
-
+  
   border: 2px solid #00ff66;
   padding: 8px 12px;
-
+  
   cursor: pointer;
   width: 100%
 }
 
 .settings-button:hover,
-.scenes-button:hover {
+.scenes-button:hover,
+.renderer-button:hover {
   color: #0a0a0a;
   background: #00ff66;
 }
@@ -63,7 +82,7 @@
 
   border: none;
   padding: 8px;
-
+  
   cursor: pointer;
 }
 
@@ -73,4 +92,25 @@
   background: #00ff66;
 
   outline: none;
+}
+
+.renderer-button {
+  width: 100%
+}
+
+
+.renderer-menu {
+  display: grid;
+  width: 100%;
+  grid-template-rows: 1fr 1fr;
+}
+
+.renderer-option {
+  margin: 0 0 0 10%;
+}
+
+.renderer-selector {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 2fr 1fr;
 }

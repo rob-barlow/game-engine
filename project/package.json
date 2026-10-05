@@ -7,13 +7,16 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
+    "build": "tsc --outDir dev/www/js",
+
     "update": "rmdir /S /Q \"dev/www/js\" & npm run build",
     "update-html": "copy src\\ui\\* dev\\www /y ",
-    "build": "tsc --outDir dev/www/js",
+
     "publish": "robocopy dev/www prod/www /MIR",
-    "update-and-publish": "npm run update && npm run update-html && npm run publish",
+
     "serve-dev": "npx http-server --port 10 -c-1 dev\\www",
     "serve-prod": "npx http-server --port 8080 -c-1 prod\\www",
+    
     "test": "vitest run"
   },
   "devDependencies": {

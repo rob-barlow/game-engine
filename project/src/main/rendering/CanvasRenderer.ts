@@ -3,9 +3,10 @@ import { RasterVertex } from "../maths/RasterVertex.js";
 import { Scene } from "../scene/Scene.js";
 import { CanvasSize } from "../utils/types.js";
 import { Projection } from "./Projection.js";
+import { Renderer } from "./Renderer.js";
 import { ScreenBuffer } from "./ScreenBuffer.js";
 
-export class CanvasRenderer {
+export class CanvasRenderer implements Renderer {
     screenBuffer: ScreenBuffer
 
     ctx: CanvasRenderingContext2D;

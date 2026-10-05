@@ -35,12 +35,24 @@
       </button>
 
       <div class="scenes-menu">
-        <button id="maze-scene" data-scene="maze">> MAZE</button>
-        <button id="rabbit-scene" data-scene="rabbit">> RABBIT</button>
+        <button class="scene-option selected" id="maze-scene" data-scene="maze">> MAZE</button>
+        <button class="scene-option" id="rabbit-scene" data-scene="rabbit">> RABBIT</button>
       </div>
 
     </div>
 
+     <div class="renderer-selector">
+
+      <button class="renderer-button" type="button">
+        [ TOGGLE RENDERER ]
+      </button>
+
+      <div class="renderer-menu">
+        <p class="renderer-option selected" id="webgl-renderer" data-renderer="cpu">> CPU</p>
+        <p class="renderer-option" id="canvas-renderer" data-renderer="gpu">> GPU</p>
+      </div>
+    
+    </div>
   </div>
     
   <div class="ui-panel settings-menu">

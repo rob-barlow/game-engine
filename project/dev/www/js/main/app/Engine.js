@@ -6,6 +6,7 @@ import UiController from "../controls/ui/UiController.js";
 import Scenes from "./scenes/Scenes.js";
 import { createMazeScene } from "./scenes/MazeScene/MazeScene.js";
 import { createRabbitScene } from "./scenes/RabbitScene/RabbitScene.js";
+import RendererType from "../utils/rendererTypes.js";
 export class Engine {
     renderer;
     scene;
@@ -19,7 +20,7 @@ export class Engine {
         this.renderer = renderer;
         this.scene = initialScene;
         this.controllers = controllers;
-        this.gameStateManager = new GameStateManager(this.inputReader, this.uiController, this.gameSettings, this.changeScene);
+        this.gameStateManager = new GameStateManager(this.inputReader, this.uiController, this.gameSettings, this.changeScene, this.changeRenderer);
         this.controllers.forEach(controller => {
             controller.setInputReader(this.inputReader);
             controller.useSettings(this.gameSettings);
@@ -51,17 +52,34 @@ export class Engine {
             }
         });
     }
+    frame = (now) => {
+        const dt = Math.min((now - this.lastFrameTimestamp) / 1000, 0.3);
+        this.lastFrameTimestamp = now;
+        this.gameStateManager.update();
+        switch (this.gameStateManager.state) {
+            case GameState.PlayingMazdle:
+                this.updateGame(dt);
+                this.renderer.render(this.scene, Math.trunc(1 / dt));
+                break;
+            case GameState.MainMenu:
+                break;
+            case GameState.Settings:
+                break;
+        }
+        this.inputReader.iterateFrame();
+        requestAnimationFrame(this.frame);
+    };
+    // callbacks
     changeScene = (sceneEnum) => {
+        this.uiController.setScene(sceneEnum);
         let scene;
         let controllers;
         switch (sceneEnum) {
             case Scenes.Maze:
                 ({ scene, controllers } = createMazeScene());
-                console.log("Changing scene to maze");
                 break;
             case Scenes.Rabbit:
                 ({ scene, controllers } = createRabbitScene());
-                console.log("Changing scene to rabbit");
                 break;
         }
         this.scene = scene;
@@ -71,11 +89,13 @@ export class Engine {
             controller.useSettings(this.gameSettings);
         });
     };
-    frame = (now) => {
-        const dt = Math.min((now - this.lastFrameTimestamp) / 1000, 0.3);
-        this.lastFrameTimestamp = now;
-        this.update(dt);
-        this.renderer.render(this.scene, Math.trunc(1 / dt));
-        requestAnimationFrame(this.frame);
+    changeRenderer = (rendererType) => {
+        switch (rendererType) {
+            case RendererType.CPU:
+                break;
+            case RendererType.GPU:
+                break;
+        }
+        this.uiController.highlightRenderer(rendererType);
     };
 }

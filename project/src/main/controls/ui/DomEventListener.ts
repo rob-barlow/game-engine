@@ -6,7 +6,8 @@ type params = {
     onBack: () => void,
     onSceneMenu: () => void,
     onSceneChange: (scene: Scenes) => void,
-    onSensitivityChange: (sensitivity: number) => void
+    onSensitivityChange: (sensitivity: number) => void,
+    onRendererToggle: () => void
 }
 
 export default class DomEventListener {
@@ -15,7 +16,7 @@ export default class DomEventListener {
         const backButton = document.querySelector(".back-button") as HTMLElement;
         const playButton = document.querySelector(".play-button") as HTMLElement;
         const mouseSensitivityRange = document.querySelector(".mouse-sensitivity-input") as HTMLElement;
-        
+        const toggleRendererButton = document.querySelector(".renderer-button") as HTMLElement;
 
         settingsButton.addEventListener("click", () => {
             params.onSettings()
@@ -27,6 +28,10 @@ export default class DomEventListener {
 
         playButton.addEventListener("click", () => {
             params.onPlay()
+        });
+
+        toggleRendererButton.addEventListener("click", () => {
+            params.onRendererToggle()
         });
 
         mouseSensitivityRange.addEventListener("input", (event) => {

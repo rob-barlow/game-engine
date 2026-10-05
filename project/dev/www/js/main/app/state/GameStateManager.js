@@ -1,13 +1,15 @@
 import { defaultSensitivity } from "../GameSettings.js";
 import DomEventListener from "../../controls/ui/DomEventListener.js";
 import GameState from "./GameState.js";
+import RendererType from "../../utils/rendererTypes.js";
 export default class GameStateManager {
     state = GameState.MainMenu;
+    currentRendererType = RendererType.CPU;
     domEventListener;
     inputReader;
     gameSettings;
     uiController;
-    constructor(inputReader, uiController, gameSettings, onSceneChange) {
+    constructor(inputReader, uiController, gameSettings, changeEngineScene, changeEngineRenderer) {
         this.inputReader = inputReader;
         this.uiController = uiController;
         this.gameSettings = gameSettings;
@@ -16,9 +18,13 @@ export default class GameStateManager {
             onSettings: () => this.setState(GameState.Settings),
             onBack: () => this.setState(GameState.MainMenu),
             onSceneMenu: () => this.uiController.toggleScenesMenu(),
-            onSceneChange: onSceneChange,
+            onSceneChange: changeEngineScene,
             onSensitivityChange: value => {
                 this.gameSettings.mouseSensitivity = value * (defaultSensitivity / 50);
+            },
+            onRendererToggle: () => {
+                this.currentRendererType = this.currentRendererType === RendererType.CPU ? RendererType.GPU : RendererType.CPU;
+                changeEngineRenderer(this.currentRendererType);
             }
         });
     }
