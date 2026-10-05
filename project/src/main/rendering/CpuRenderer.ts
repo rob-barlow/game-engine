@@ -61,6 +61,10 @@ export class CpuRenderer implements Renderer {
             // })
 
             Projection.projectTriangles(gameObject.mesh.triangles, gameObject.transform, cameraMatrix, projectionMatrix, viewportMatrix).forEach(triangle => {
+                triangle = triangle.map(vertex => {
+                    return {clipPosition: Matrix4.apply(viewportMatrix, vertex.clipPosition), viewZ: vertex.viewZ}
+                }) as [RasterVertex, RasterVertex, RasterVertex]
+                
                 this.drawTriangle(triangle[0], triangle[1], triangle[2], gameObject.mesh!.colour)
             })
         })

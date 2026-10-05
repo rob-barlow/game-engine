@@ -1,4 +1,4 @@
-import { Transform } from "../maths/index.js";
+import { Matrix4, Transform } from "../maths/index.js";
 import { Projection } from "./Projection.js";
 import { ScreenBuffer } from "./ScreenBuffer.js";
 export class CpuRenderer {
@@ -43,6 +43,9 @@ export class CpuRenderer {
             //     this.drawTriangle(triangle[0], triangle[1], triangle[2], gameObject.colour)
             // })
             Projection.projectTriangles(gameObject.mesh.triangles, gameObject.transform, cameraMatrix, projectionMatrix, viewportMatrix).forEach(triangle => {
+                triangle = triangle.map(vertex => {
+                    return { clipPosition: Matrix4.apply(viewportMatrix, vertex.clipPosition), viewZ: vertex.viewZ };
+                });
                 this.drawTriangle(triangle[0], triangle[1], triangle[2], gameObject.mesh.colour);
             });
         });

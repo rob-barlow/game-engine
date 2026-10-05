@@ -35,15 +35,15 @@ export const Projection = {
             let currentTriangle = trianglesAfterClipping[i]
 
             const rasterVertex0 = {
-                clipPosition: Matrix4.apply(viewportMatrix, Vec4.scale(currentTriangle[0].clipPosition, 1/currentTriangle[0].clipPosition.w)),
+                clipPosition: Vec4.scale(currentTriangle[0].clipPosition, 1/currentTriangle[0].clipPosition.w),
                 viewZ: currentTriangle[0].viewZ}
 
             const rasterVertex1 = {
-                clipPosition: Matrix4.apply(viewportMatrix, Vec4.scale(currentTriangle[1].clipPosition, 1/currentTriangle[1].clipPosition.w)),
+                clipPosition: Vec4.scale(currentTriangle[1].clipPosition, 1/currentTriangle[1].clipPosition.w),
                 viewZ: currentTriangle[1].viewZ}
 
             const rasterVertex2 = {
-                clipPosition: Matrix4.apply(viewportMatrix, Vec4.scale(currentTriangle[2].clipPosition, 1/currentTriangle[2].clipPosition.w)),
+                clipPosition: Vec4.scale(currentTriangle[2].clipPosition, 1/currentTriangle[2].clipPosition.w),
                 viewZ: currentTriangle[2].viewZ}
 
             const v1x = rasterVertex1.clipPosition.x - rasterVertex0.clipPosition.x
@@ -52,7 +52,7 @@ export const Projection = {
             const v2y = rasterVertex2.clipPosition.y - rasterVertex1.clipPosition.y
             const cross = (v1x * v2y) - (v1y * v2x);
 
-            if (cross > 0)
+            if (cross < 0)
                 canvasTriangles.push([rasterVertex0, rasterVertex1, rasterVertex2])
         }
 

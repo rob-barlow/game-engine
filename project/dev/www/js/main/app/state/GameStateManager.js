@@ -51,12 +51,11 @@ export default class GameStateManager {
                 break;
             case GameState.PlayingMazdle:
                 await document.body.requestPointerLock();
+                // check to see pointer lock succeeded
                 if (document.pointerLockElement != null) {
-                    console.log("Playing Mazdle");
                     this.uiController.hideUiOverlay();
                 }
                 else {
-                    console.log("Failed");
                     this.state = oldState;
                 }
                 break;
