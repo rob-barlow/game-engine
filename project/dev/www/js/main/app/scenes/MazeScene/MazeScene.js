@@ -26,15 +26,22 @@ function addMaze(scene, mazeWidth, mazeHeight) {
     const boundaries = [];
     let startPositionX = 0;
     let startPositionZ = 0;
+    const floorPanelTransform = {
+        position: { x: 1, y: -0.01, z: 1 },
+        orientation: Matrix3.identity(),
+        scale: { x: 2 * maze[0].length, y: 1, z: 2 * maze.length }
+    };
+    flatPanels.push(new Panel(floorPanelTransform, floorColour));
+    const ceilingPanelTransform = {
+        position: { x: 2 * maze[0].length - 1, y: 3.99, z: 1 },
+        orientation: Matrix3.multiply(Matrix3.getRotationMatrix('z', Math.PI), Matrix3.identity()),
+        scale: { x: 2 * maze[0].length, y: 1, z: 2 * maze.length }
+    };
+    flatPanels.push(new Panel(ceilingPanelTransform, ceilingColour));
     for (let rowIndex = 0; rowIndex < maze.length; rowIndex++) {
         for (let columnIndex = 0; columnIndex < maze[rowIndex].length; columnIndex++) {
             // x = row, z = column
             if (maze[rowIndex][columnIndex] == 0 || maze[rowIndex][columnIndex] == 2 || maze[rowIndex][columnIndex] == 3) {
-                // add floor and ceiling
-                if (maze[rowIndex][columnIndex] != 3) {
-                    flatPanels.push(...getPanelsWrapper([2 * rowIndex, 2 * rowIndex + 1], 0, [2 * columnIndex, 2 * columnIndex + 1], 'Y', floorColour));
-                }
-                flatPanels.push(...getPanelsWrapper([2 * rowIndex, 2 * rowIndex + 1], 4, [2 * columnIndex, 2 * columnIndex + 1], '-Y', ceilingColour));
                 // add wall between this and all 1s
                 if (maze[rowIndex - 1][columnIndex] == 1) {
                     panels.push(...getPanelsWrapper(2 * rowIndex, 0, [2 * columnIndex, 2 * columnIndex + 1], 'X', leftWallColour));

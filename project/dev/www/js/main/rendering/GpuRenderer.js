@@ -3,7 +3,7 @@ import { Projection } from "./Projection.js";
 export class GpuRenderer {
     positionBuffer;
     colourBuffer;
-    ctx;
+    gl;
     size;
     projectionMatrix;
     viewportMatrix;
@@ -11,22 +11,24 @@ export class GpuRenderer {
         const canvas = document.getElementById("gpu-canvas");
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        this.ctx = canvas.getContext("webgl");
-        this.ctx.clearColor(0.5, 0.5, 0.5, 1.0);
-        const vertexShader = createShader(this.ctx, this.ctx.VERTEX_SHADER, vertexShaderSource);
-        const fragmentShader = createShader(this.ctx, this.ctx.FRAGMENT_SHADER, fragmentShaderSource);
-        const program = createProgram(this.ctx, vertexShader, fragmentShader);
-        this.ctx.useProgram(program);
-        this.positionBuffer = this.ctx.createBuffer();
-        this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, this.positionBuffer);
-        const positionAttributeLocation = this.ctx.getAttribLocation(program, "aVertexPosition");
-        this.ctx.enableVertexAttribArray(positionAttributeLocation);
-        this.ctx.vertexAttribPointer(positionAttributeLocation, 3, this.ctx.FLOAT, false, 0, 0);
-        this.colourBuffer = this.ctx.createBuffer();
-        this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, this.colourBuffer);
-        const colourAttributeLocation = this.ctx.getAttribLocation(program, "aVertexColour");
-        this.ctx.enableVertexAttribArray(colourAttributeLocation);
-        this.ctx.vertexAttribPointer(colourAttributeLocation, 4, this.ctx.FLOAT, false, 0, 0);
+        this.gl = canvas.getContext("webgl");
+        this.gl.clearColor(0.5, 0.5, 0.5, 1.0);
+        const vertexShader = createShader(this.gl, this.gl.VERTEX_SHADER, vertexShaderSource);
+        const fragmentShader = createShader(this.gl, this.gl.FRAGMENT_SHADER, fragmentShaderSource);
+        const program = createProgram(this.gl, vertexShader, fragmentShader);
+        this.gl.useProgram(program);
+        this.positionBuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
+        const positionAttributeLocation = this.gl.getAttribLocation(program, "aVertexPosition");
+        this.gl.enableVertexAttribArray(positionAttributeLocation);
+        this.gl.vertexAttribPointer(positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
+        this.colourBuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colourBuffer);
+        const colourAttributeLocation = this.gl.getAttribLocation(program, "aVertexColour");
+        this.gl.enableVertexAttribArray(colourAttributeLocation);
+        this.gl.vertexAttribPointer(colourAttributeLocation, 4, this.gl.FLOAT, false, 0, 0);
+        this.gl.enable(this.gl.DEPTH_TEST);
+        this.gl.depthFunc(this.gl.LESS);
         this.size = {
             width: canvas.width,
             height: canvas.height
@@ -35,7 +37,7 @@ export class GpuRenderer {
         this.viewportMatrix = Transform.getViewportMatrix(this.size);
     }
     render(scene, fps = undefined) {
-        this.ctx.clear(this.ctx.COLOR_BUFFER_BIT);
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
         const camera = scene.activeCamera;
         const triangles = [];
         const colours = [];
@@ -48,33 +50,28 @@ export class GpuRenderer {
                 return;
             Projection.projectTriangles(gameObject.mesh.triangles, gameObject.transform, cameraMatrix, projectionMatrix, viewportMatrix).forEach(triangle => {
                 const currentTriangle = [
-                    { x: triangle[0].clipPosition.x, y: triangle[0].clipPosition.y, z: triangle[0].viewZ / 50 - 1 },
-                    { x: triangle[1].clipPosition.x, y: triangle[1].clipPosition.y, z: triangle[1].viewZ / 50 - 1 },
-                    { x: triangle[2].clipPosition.x, y: triangle[2].clipPosition.y, z: triangle[2].viewZ / 50 - 1 }
+                    { x: triangle[0].clipPosition.x, y: triangle[0].clipPosition.y, z: triangle[0].viewZ / 100 },
+                    { x: triangle[1].clipPosition.x, y: triangle[1].clipPosition.y, z: triangle[1].viewZ / 100 },
+                    { x: triangle[2].clipPosition.x, y: triangle[2].clipPosition.y, z: triangle[2].viewZ / 100 }
                 ];
                 triangles.push(currentTriangle);
-                const colour = gameObject.mesh?.colour.map(c => c / 255);
-                if (colour) {
+                let colour = gameObject.mesh?.colour.map(c => c / 255);
+                colour = colour ? colour : [0, 0, 0];
+                for (let i = 0; i < 3; i++) {
                     colours.push(colour[0]);
                     colours.push(colour[1]);
                     colours.push(colour[2]);
-                    colours.push(1.0);
-                }
-                else {
-                    colours.push(0);
-                    colours.push(0);
-                    colours.push(0);
                     colours.push(1.0);
                 }
             });
         });
         const verticesData = this.trianglesToArray(triangles);
         const coloursData = new Float32Array(colours);
-        this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, this.positionBuffer);
-        this.ctx.bufferData(this.ctx.ARRAY_BUFFER, verticesData, this.ctx.STATIC_DRAW);
-        this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, this.colourBuffer);
-        this.ctx.bufferData(this.ctx.ARRAY_BUFFER, coloursData, this.ctx.STATIC_DRAW);
-        this.ctx.drawArrays(this.ctx.TRIANGLES, 0, verticesData.length / 3);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, verticesData, this.gl.STATIC_DRAW);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colourBuffer);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, coloursData, this.gl.STATIC_DRAW);
+        this.gl.drawArrays(this.gl.TRIANGLES, 0, verticesData.length / 3);
     }
     trianglesToArray(triangles) {
         const vertices = new Float32Array(triangles.length * 3 * 3);

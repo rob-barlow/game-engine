@@ -60,6 +60,7 @@ export class CpuRenderer {
         if (fps)
             this.ctx.fillText("fps: " + fps.toString(), 5, 10);
         this.ctx.fillText("triangles: " + triangles.length.toString(), 5, 20);
+        this.ctx.fillText("x: " + Math.trunc(camera.transform.position.x) + " z: " + Math.trunc(camera.transform.position.z), 5, 30);
         // this.ctx.fillText("objects: " + gameObjects.length.toString(), 5, 30) 
     }
     drawTriangle(p1, p2, p3, colour = [0, 0, 255]) {
