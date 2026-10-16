@@ -1,6 +1,6 @@
-import { RasterVertex } from "./RasterVertex.js"
-import { Vec3 } from "./Vec3.js"
-import { Vec4 } from "./Vec4.js"
+import { RasterVertex } from "./RasterVertex"
+import { Vec3 } from "./Vec3"
+import { Vec4 } from "./Vec4"
 
 export const Lerp = {
     lerpNum(a: number, b: number, t: number): number{

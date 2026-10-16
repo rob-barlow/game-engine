@@ -9,6 +9,6 @@
 		"watch_dir": "src"
 	},
   "assets": {
-    "directory": "./prod/www"
+    "directory": "./dist"
   }
 }

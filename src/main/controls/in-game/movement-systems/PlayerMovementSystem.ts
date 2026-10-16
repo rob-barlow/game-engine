@@ -1,11 +1,11 @@
-import { Matrix3, Vec3 } from "../../../maths/index.js";
-import { Intent } from "../../../maths/Intent.js";
-import { Line3 } from "../../../maths/Line3.js";
-import { Scene } from "../../../scene/Scene.js";
-import { CameraRotationSpeed, CameraSpeed } from "../../../utils/constants.js";
-import BoxCollider from "../../../collisions/BoxCollider.js";
-import MovementSystem from "./MovementSystem.js";
-import { GameObject } from "../../../scene/game-objects/index.js";
+import { Matrix3, Vec3 } from "../../../maths/index";
+import { Intent } from "../../../maths/Intent";
+import { Line3 } from "../../../maths/Line3";
+import { Scene } from "../../../scene/Scene";
+import { CameraRotationSpeed, CameraSpeed } from "../../../utils/constants";
+import BoxCollider from "../../../collisions/BoxCollider";
+import MovementSystem from "./MovementSystem";
+import { GameObject } from "../../../scene/game-objects/index";
 
 export default class PlayerMovementSystem implements MovementSystem {
     move(target: GameObject, cameraIntent: Intent, scene: Scene, dt: number){

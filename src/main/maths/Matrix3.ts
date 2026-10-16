@@ -1,4 +1,4 @@
-import { Vec3 } from "./index.js";
+import { Vec3 } from "./index";
 
 export type Matrix3 = 
     [[number, number, number],

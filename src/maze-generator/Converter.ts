@@ -1,4 +1,4 @@
-import { Maze } from "./maze.js";
+import { Maze } from "./maze";
 
 export const Converter = {
     toBinaryArray(maze: Maze): number[][]{

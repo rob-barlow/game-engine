@@ -1,10 +1,10 @@
-import InputReader from "../../controls/in-game/InputReader.js";
-import GameSettings, { defaultSensitivity } from "../GameSettings.js";
-import DomEventListener from "../../controls/ui/DomEventListener.js";
-import GameState from "./GameState.js";
-import UiController from "../../controls/ui/UiController.js";
-import Scenes from "../../scene/scenes/Scenes.js";
-import RendererType from "../../utils/rendererTypes.js";
+import InputReader from "../../controls/in-game/InputReader";
+import GameSettings, { defaultSensitivity } from "../GameSettings";
+import DomEventListener from "../../controls/ui/DomEventListener";
+import GameState from "./GameState";
+import UiController from "../../controls/ui/UiController";
+import Scenes from "../../scene/scenes/Scenes";
+import RendererType from "../../utils/rendererTypes";
 
 export default class GameStateManager {
     state: GameState = GameState.MainMenu

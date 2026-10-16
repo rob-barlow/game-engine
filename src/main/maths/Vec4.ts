@@ -1,4 +1,4 @@
-import { Vec3 } from "./Vec3.js"
+import { Vec3 } from "./Vec3"
 
 export type Vec4 = {
     x: number,

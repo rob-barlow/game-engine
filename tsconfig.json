@@ -1,12 +1,32 @@
+// {
+//   "compilerOptions": {
+//     "target": "ES2022",
+//     "module": "ES2022",
+//     "moduleResolution": "bundler",
+//     "outDir": "./dist",
+//     "rootDir": "./src",
+//     "strict": true,
+//     "sourceMap": false,
+//   },
+//   "exclude": ["**/*.test.ts"]
+// }
+
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ES2022",
+    "target": "es2023",
+    "module": "esnext",
+    "lib": ["ES2023", "DOM"],
+    "types": ["vite/client"],
+    "allowArbitraryExtensions": true,
+    "skipLibCheck": true,
+
+    /* Bundler mode */
     "moduleResolution": "bundler",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "sourceMap": false,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": false,
+    "moduleDetection": "force",
+    "noEmit": true,
+
   },
-  "exclude": ["**/*.test.ts"]
+  "include": ["src"]
 }

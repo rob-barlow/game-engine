@@ -7,20 +7,17 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc --outDir dev/www/js",
-    "build-prod": "tsc --outDir prod/www/js",
-    "update": "rmdir /S /Q \"dev/www/js\" & npm run build",
-    "update-html": "copy src\\ui\\* dev\\www /y ",
-    "update-html-prod": "copy src\\ui\\* prod\\www /y ",
-    "publish": "robocopy dev/www prod/www /MIR",
-    "serve-dev": "npx http-server --port 10 -c-1 dev\\www",
-    "serve-prod": "npx http-server --port 8080 -c-1 prod\\www",
-    "test": "vitest run",
-    "on-commit": "npm run build-prod && npm run update-html-prod"
+    "dev": "vite --host",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10"
+  },
+  "dependencies": {
+    "vite": "^8.3.4"
   }
 }

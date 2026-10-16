@@ -1,8 +1,8 @@
-import GameSettings from "../../../app/GameSettings.js";
-import { Intent } from "../../../maths/Intent.js";
-import { GameObject } from "../../../scene/game-objects/GameObject.js";
-import { Controller } from "./Controller.js";
-import InputReader from "../InputReader.js";
+import GameSettings from "../../../app/GameSettings";
+import { Intent } from "../../../maths/Intent";
+import { GameObject } from "../../../scene/game-objects/GameObject";
+import { Controller } from "./Controller";
+import InputReader from "../InputReader";
 
 export class PlayerController implements Controller {
     target: GameObject;

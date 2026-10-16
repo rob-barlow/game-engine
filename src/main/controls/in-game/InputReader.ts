@@ -1,4 +1,4 @@
-import { ArrowKey, WasdKey } from "../../utils/types.js";
+import { ArrowKey, WasdKey } from "../../utils/types";
 
 export default class InputReader {
     inputBuffer: (WasdKey | ArrowKey)[] = [];

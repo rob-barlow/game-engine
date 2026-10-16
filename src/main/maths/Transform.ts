@@ -1,6 +1,6 @@
-import { farPlaneZ, nearPlaneZ } from "../utils/constants.js";
-import { CanvasSize } from "../utils/types.js";
-import { Matrix3, Matrix4, Vec3 } from "./index.js";
+import { farPlaneZ, nearPlaneZ } from "../utils/constants";
+import { CanvasSize } from "../utils/types";
+import { Matrix3, Matrix4, Vec3 } from "./index";
 
 export type Transform = {
     position: Vec3,

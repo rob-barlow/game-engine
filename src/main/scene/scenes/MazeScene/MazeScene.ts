@@ -1,13 +1,13 @@
-import { generateMaze } from "../../../../maze-generator/generateMaze.js";
-import { Controller } from "../../../controls/in-game/controllers/Controller.js";
-import { Matrix3, Transform, Vec3 } from "../../../maths/index.js";
-import Boundary from "../../game-objects/Boundary.js";
-import { GameObject } from "../../game-objects/GameObject.js";
-import { Panel } from "../../game-objects/Panel.js";
-import { Scene } from "../../Scene.js";
-import { PanelDirection } from "../../../utils/types.js";
-import { addPlayer } from "../Extensions.js";
-import MazePanelTypes from "./MazePanelTypes.js";
+import { generateMaze } from "../../../../maze-generator/generateMaze";
+import { Controller } from "../../../controls/in-game/controllers/Controller";
+import { Matrix3, Transform, Vec3 } from "../../../maths/index";
+import Boundary from "../../game-objects/Boundary";
+import { GameObject } from "../../game-objects/GameObject";
+import { Panel } from "../../game-objects/Panel";
+import { Scene } from "../../Scene";
+import { PanelDirection } from "../../../utils/types";
+import { addPlayer } from "../Extensions";
+import MazePanelTypes from "./MazePanelTypes";
 
 export function createMazeScene(): {scene: Scene, controllers: Controller[]} {
     const mazeWidth = 20;

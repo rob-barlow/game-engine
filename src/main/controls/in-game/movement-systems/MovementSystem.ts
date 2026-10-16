@@ -1,6 +1,6 @@
-import { Intent } from "../../../maths/Intent.js";
-import { Scene } from "../../../scene/Scene.js";
-import { GameObject } from "../../../scene/game-objects/GameObject.js";
+import { Intent } from "../../../maths/Intent";
+import { Scene } from "../../../scene/Scene";
+import { GameObject } from "../../../scene/game-objects/GameObject";
 
 export default interface MovementSystem {
     move(target: GameObject, cameraIntent: Intent, scene: Scene, dt: number): void

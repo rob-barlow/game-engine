@@ -1,6 +1,6 @@
-import { Transform, Vec3 } from "../../maths/index.js";
-import Mesh from "../../meshes/Mesh.js";
-import { GameObject } from "./GameObject.js";
+import { Transform, Vec3 } from "../../maths/index";
+import Mesh from "../../meshes/Mesh";
+import { GameObject } from "./GameObject";
 
 export default class Rabbit extends GameObject {
     mesh: Mesh;

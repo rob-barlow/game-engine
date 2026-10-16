@@ -1,4 +1,4 @@
-import Scenes from "../../scene/scenes/Scenes.js";
+import Scenes from "../../scene/scenes/Scenes";
 
 type params = {
     onPlay: () => void,

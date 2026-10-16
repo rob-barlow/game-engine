@@ -1,11 +1,11 @@
-import BoxCollider from "../collisions/BoxCollider.js";
-import Collider from "../collisions/Collider.js";
-import CollisionSystem from "../collisions/CollisionSystem.js";
-import { Matrix4 } from "../maths/Matrix4.js";
-import { Transform } from "../maths/Transform.js";
-import { Vec3 } from "../maths/Vec3.js";
-import { Vec4 } from "../maths/Vec4.js";
-import { GameObject } from "./game-objects/index.js";
+import BoxCollider from "../collisions/BoxCollider";
+import Collider from "../collisions/Collider";
+import CollisionSystem from "../collisions/CollisionSystem";
+import { Matrix4 } from "../maths/Matrix4";
+import { Transform } from "../maths/Transform";
+import { Vec3 } from "../maths/Vec3";
+import { Vec4 } from "../maths/Vec4";
+import { GameObject } from "./game-objects/index";
 
 export class Scene {
     gameObjects: GameObject[] = [];

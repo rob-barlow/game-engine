@@ -1,6 +1,6 @@
-import { Maze } from "./maze.js";
-import { type Position } from "./Position.js";
-import { Converter } from "./Converter.js";
+import { Maze } from "./maze";
+import { type Position } from "./Position";
+import { Converter } from "./Converter";
 
 
 export function generateMaze(width: number = 10, height: number = 10): {seed: number, maze: number[][]}{

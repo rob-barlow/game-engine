@@ -1,4 +1,4 @@
-import { Vec4 } from "./Vec4.js";
+import { Vec4 } from "./Vec4";
 
 export type Matrix4 = [[number, number, number, number],
     [number, number, number, number],

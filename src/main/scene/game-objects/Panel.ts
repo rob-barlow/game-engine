@@ -1,6 +1,6 @@
-import { Transform, Vec3 } from "../../maths/index.js";
-import Mesh from "../../meshes/Mesh.js";
-import { GameObject } from "./GameObject.js";
+import { Transform, Vec3 } from "../../maths/index";
+import Mesh from "../../meshes/Mesh";
+import { GameObject } from "./GameObject";
 
 const panelVertices: [Vec3, Vec3, Vec3][] = [
         [{x: 0, y: 0, z: 0},

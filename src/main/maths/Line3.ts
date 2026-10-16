@@ -1,4 +1,4 @@
-import { Vec3 } from "./index.js"
+import { Vec3 } from "./index"
 
 export type Line3 = {
     direction: Vec3,

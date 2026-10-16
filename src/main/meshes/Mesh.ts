@@ -1,4 +1,4 @@
-import { Vec3 } from "../maths/index.js";
+import { Vec3 } from "../maths/index";
 
 export default class Mesh {
     triangles: [Vec3, Vec3, Vec3][]

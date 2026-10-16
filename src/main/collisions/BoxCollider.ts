@@ -1,5 +1,5 @@
-import { Vec3 } from "../maths/index.js";
-import Collider from "./Collider.js";
+import { Vec3 } from "../maths/index";
+import Collider from "./Collider";
 
 export default class BoxCollider implements Collider {
     min: Vec3;

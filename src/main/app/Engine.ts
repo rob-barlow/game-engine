@@ -1,18 +1,18 @@
-import { Controller } from "../controls/in-game/controllers/Controller.js";
-import InputReader from "../controls/in-game/InputReader.js";
-import { Intent } from "../maths/Intent.js";
-import { Scene } from "../scene/Scene.js";
-import GameSettings from "./GameSettings.js";
-import GameState from "./state/GameState.js";
-import GameStateManager from "./state/GameStateManager.js";
-import UiController from "../controls/ui/UiController.js";
-import Scenes from "../scene/scenes/Scenes.js";
-import { createMazeScene } from "../scene/scenes/MazeScene/MazeScene.js";
-import { createRabbitScene } from "../scene/scenes/RabbitScene/RabbitScene.js";
-import RendererType from "../utils/rendererTypes.js";
-import { Renderer } from "../rendering/Renderer.js";
-import { CpuRenderer } from "../rendering/CpuRenderer.js";
-import { GpuRenderer } from "../rendering/GpuRenderer.js";
+import { Controller } from "../controls/in-game/controllers/Controller";
+import InputReader from "../controls/in-game/InputReader";
+import { Intent } from "../maths/Intent";
+import { Scene } from "../scene/Scene";
+import GameSettings from "./GameSettings";
+import GameState from "./state/GameState";
+import GameStateManager from "./state/GameStateManager";
+import UiController from "../controls/ui/UiController";
+import Scenes from "../scene/scenes/Scenes";
+import { createMazeScene } from "../scene/scenes/MazeScene/MazeScene";
+import { createRabbitScene } from "../scene/scenes/RabbitScene/RabbitScene";
+import RendererType from "../utils/rendererTypes";
+import { Renderer } from "../rendering/Renderer";
+import { CpuRenderer } from "../rendering/CpuRenderer";
+import { GpuRenderer } from "../rendering/GpuRenderer";
 
 export class Engine{
     renderer: Renderer = new CpuRenderer();

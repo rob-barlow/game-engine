@@ -1,6 +1,6 @@
-import { Matrix3, Vec2, Vec4 } from "./index.js"
-import { farPlaneZ, nearPlaneZ } from "../utils/constants.js"
-import { Line3 } from "./Line3.js"
+import { Matrix3, Vec2, Vec4 } from "./index"
+import { farPlaneZ, nearPlaneZ } from "../utils/constants"
+import { Line3 } from "./Line3"
 
 export type Vec3 = {
     x: number,

@@ -1,6 +1,6 @@
-import BoxCollider from "../../collisions/BoxCollider.js";
-import { Transform, Vec3 } from "../../maths/index.js";
-import { GameObject } from "./GameObject.js";
+import BoxCollider from "../../collisions/BoxCollider";
+import { Transform, Vec3 } from "../../maths/index";
+import { GameObject } from "./GameObject";
 
 export default class Boundary extends GameObject {
     colour: [number, number, number] = [0,0,0];

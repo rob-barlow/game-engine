@@ -1,6 +1,5 @@
-import { CpuRenderer } from "./rendering/CpuRenderer.js";
-import { Engine } from "./app/Engine.js";
-import { createMazeScene } from "./scene/scenes/MazeScene/MazeScene.js";
+import { Engine } from "./app/Engine";
+import { createMazeScene } from "./scene/scenes/MazeScene/MazeScene";
 
 export default async function main() {
 

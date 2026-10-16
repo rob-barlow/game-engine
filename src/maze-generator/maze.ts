@@ -1,5 +1,5 @@
-import { Random } from "./random.js";
-import { Position } from "./Position.js";
+import { Random } from "./random";
+import { Position } from "./Position";
 
 export class Maze{
     width: number;

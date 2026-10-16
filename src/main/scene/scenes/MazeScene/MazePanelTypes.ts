@@ -1,4 +1,4 @@
-import { Matrix3, Transform, Vec3 } from "../../../maths/index.js"
+import { Matrix3, Transform, Vec3 } from "../../../maths/index"
 
 const MazePanelTypes = {
     getPanelTransform(position: Vec3, normal: Vec3): Transform {

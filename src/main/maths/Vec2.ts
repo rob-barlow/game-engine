@@ -1,4 +1,4 @@
-import { CanvasSize } from "../utils/types.js"
+import { CanvasSize } from "../utils/types"
 
 export type Vec2 = {
     x: number,

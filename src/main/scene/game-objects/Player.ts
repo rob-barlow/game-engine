@@ -1,6 +1,6 @@
-import PlayerMovementSystem from "../../controls/in-game/movement-systems/PlayerMovementSystem.js";
-import { Transform } from "../../maths/index.js";
-import { GameObject } from "./GameObject.js";
+import PlayerMovementSystem from "../../controls/in-game/movement-systems/PlayerMovementSystem";
+import { Transform } from "../../maths/index";
+import { GameObject } from "./GameObject";
 
 export default class Player extends GameObject {
     movementSystem = new PlayerMovementSystem()

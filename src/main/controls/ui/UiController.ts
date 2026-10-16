@@ -1,5 +1,5 @@
-import Scenes from "../../scene/scenes/Scenes.js";
-import RendererType from "../../utils/rendererTypes.js";
+import Scenes from "../../scene/scenes/Scenes";
+import RendererType from "../../utils/rendererTypes";
 
 export default class UiController {
     showMainMenu(){

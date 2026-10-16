@@ -1,10 +1,10 @@
-import { Matrix4, Transform, Vec2, Vec3, Vec4 } from "../maths/index.js";
-import { RasterVertex } from "../maths/RasterVertex.js";
-import { Scene } from "../scene/Scene.js";
-import { CanvasSize } from "../utils/types.js";
-import { Projection } from "./Projection.js";
-import { Renderer } from "./Renderer.js";
-import { ScreenBuffer } from "./ScreenBuffer.js";
+import { Matrix4, Transform, Vec2, Vec3, Vec4 } from "../maths/index";
+import { RasterVertex } from "../maths/RasterVertex";
+import { Scene } from "../scene/Scene";
+import { CanvasSize } from "../utils/types";
+import { Projection } from "./Projection";
+import { Renderer } from "./Renderer";
+import { ScreenBuffer } from "./ScreenBuffer";
 
 export class CpuRenderer implements Renderer {
     screenBuffer: ScreenBuffer
