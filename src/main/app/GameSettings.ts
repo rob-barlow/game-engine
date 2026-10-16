@@ -8,4 +8,4 @@ class GameSettings {
     }
 }
 
-export default GameSettings
+export default GameSettings;
