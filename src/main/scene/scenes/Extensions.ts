@@ -1,7 +1,7 @@
 import { PlayerController } from "../../controls/in-game/controllers/PlayerController.js";
 import { Matrix3, Transform, Vec3 } from "../../maths/index.js";
-import Player from "../../scene/game-objects/Player.js";
-import { Scene } from "../../scene/Scene.js";
+import Player from "../game-objects/Player.js";
+import { Scene } from "../Scene.js";
 
 export function addPlayer(scene: Scene, position: Vec3 = {x: 0, y: 2.5, z: 0}, startOrientation: Matrix3 = Matrix3.identity()){
     const playerTransform: Transform = {

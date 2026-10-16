@@ -13,7 +13,8 @@
     "publish": "robocopy dev/www prod/www /MIR",
     "serve-dev": "npx http-server --port 10 -c-1 dev\\www",
     "serve-prod": "npx http-server --port 8080 -c-1 prod\\www",
-    "test": "vitest run"
+    "test": "vitest run",
+    "on-commit": "npm run update && npm run update-html && npm run publish"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

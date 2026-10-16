@@ -1,10 +1,10 @@
 import { generateMaze } from "../../../../maze-generator/generateMaze.js";
 import { Controller } from "../../../controls/in-game/controllers/Controller.js";
 import { Matrix3, Transform, Vec3 } from "../../../maths/index.js";
-import Boundary from "../../../scene/game-objects/Boundary.js";
-import { GameObject } from "../../../scene/game-objects/GameObject.js";
-import { Panel } from "../../../scene/game-objects/Panel.js";
-import { Scene } from "../../../scene/Scene.js";
+import Boundary from "../../game-objects/Boundary.js";
+import { GameObject } from "../../game-objects/GameObject.js";
+import { Panel } from "../../game-objects/Panel.js";
+import { Scene } from "../../Scene.js";
 import { PanelDirection } from "../../../utils/types.js";
 import { addPlayer } from "../Extensions.js";
 import MazePanelTypes from "./MazePanelTypes.js";

@@ -1,7 +1,7 @@
 import { Controller } from "../../../controls/in-game/controllers/Controller.js";
 import { Matrix3, Transform } from "../../../maths/index.js";
-import { Panel } from "../../../scene/game-objects/Panel.js";
-import { Scene } from "../../../scene/Scene.js";
+import { Panel } from "../../game-objects/Panel.js";
+import { Scene } from "../../Scene.js";
 import { addPlayer } from "../Extensions.js";
 
 export function createRabbitScene(): {scene: Scene, controllers: Controller[]} {

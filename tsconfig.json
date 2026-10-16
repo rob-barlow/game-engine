@@ -10,27 +10,3 @@
   },
   "exclude": ["**/*.test.ts"]
 }
-// {
-//   "compilerOptions": {
-//     "target": "es2023",
-//     "module": "esnext",
-//     "lib": ["ES2023", "DOM"],
-//     "types": ["./worker-configuration.d.ts"],
-//     "allowArbitraryExtensions": true,
-//     "skipLibCheck": true,
-
-//     /* Bundler mode */
-//     "moduleResolution": "bundler",
-//     "allowImportingTsExtensions": true,
-//     "verbatimModuleSyntax": true,
-//     "moduleDetection": "force",
-//     "noEmit": true,
-
-//     /* Linting */
-//     "noUnusedLocals": true,
-//     "noUnusedParameters": true,
-//     "erasableSyntaxOnly": true,
-//     "noFallthroughCasesInSwitch": true
-//   },
-//   "include": ["src"]
-// }

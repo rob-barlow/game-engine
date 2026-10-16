@@ -3,7 +3,7 @@ import GameSettings, { defaultSensitivity } from "../GameSettings.js";
 import DomEventListener from "../../controls/ui/DomEventListener.js";
 import GameState from "./GameState.js";
 import UiController from "../../controls/ui/UiController.js";
-import Scenes from "../scenes/Scenes.js";
+import Scenes from "../../scene/scenes/Scenes.js";
 import RendererType from "../../utils/rendererTypes.js";
 
 export default class GameStateManager {
