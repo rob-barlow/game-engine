@@ -1,6 +1,5 @@
 {
 	"name": "game-engine",
-	"main": "./worker/index.js",
 	"compatibility_date": "2026-10-16",
 	"observability": {
 		"enabled": true
@@ -10,7 +9,6 @@
 		"watch_dir": "src"
 	},
   "assets": {
-    "directory": "./prod/www",
-    "binding": "ASSETS"
+    "directory": "./prod/www"
   }
 }
