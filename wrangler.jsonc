@@ -1,6 +1,6 @@
 {
 	"name": "game-engine",
-	"main": "./worker/index.ts",
+	"main": "./worker/index.js",
 	"compatibility_date": "2026-10-16",
 	"observability": {
 		"enabled": true

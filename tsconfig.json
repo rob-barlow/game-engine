@@ -8,8 +8,7 @@
     "strict": true,
     "sourceMap": false,
   },
-  "include": ["src/main", "src/maze-generator"],
-  "exclude": ["**/*.test.ts", "src/worker"]
+  "exclude": ["**/*.test.ts"]
 }
 // {
 //   "compilerOptions": {
