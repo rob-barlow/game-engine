@@ -1,0 +1,23 @@
+{
+  "name": "project",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc --outDir dev/www/js",
+    "update": "rmdir /S /Q \"dev/www/js\" & npm run build",
+    "update-html": "copy src\\ui\\* dev\\www /y ",
+    "publish": "robocopy dev/www prod/www /MIR",
+    "serve-dev": "npx http-server --port 10 -c-1 dev\\www",
+    "serve-prod": "npx http-server --port 8080 -c-1 prod\\www",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  }
+}

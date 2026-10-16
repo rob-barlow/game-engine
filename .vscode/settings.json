@@ -1,8 +1,8 @@
-{
-"chat.disableAIFeatures": true,
-"editor.quickSuggestions": {
-    "comments": "off",
-    "strings": "off",
-    "other": "off"
-}
-}
+// {
+// "chat.disableAIFeatures": true,
+// "editor.quickSuggestions": {
+//     "comments": "off",
+//     "strings": "off",
+//     "other": "off"
+// }
+// }

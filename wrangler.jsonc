@@ -1,0 +1,16 @@
+{
+	"name": "game-engine",
+	"main": "./worker/index.ts",
+	"compatibility_date": "2026-10-16",
+	"observability": {
+		"enabled": true
+	},
+	"build": {
+		"command": "npm run build",
+		"watch_dir": "src"
+	},
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS"
+  }
+}
