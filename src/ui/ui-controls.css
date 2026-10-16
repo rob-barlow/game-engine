@@ -14,19 +14,7 @@
   gap: 8px;
 }
 
- /* <div class="renderer-selector">
-
-      <button class="renderer-button" type="button">
-        [ TOGGLE RENDERER ]
-      </button>
-
-      <div class="renderer-menu">
-        <p class="renderer-option selected" id="webgl-renderer" data-renderer="webgl">> GPU</p>
-        <p class="renderer-option" id="canvas-renderer" data-renderer="canvas">> CPU</p>
-      </div>
-     */
-     
-     .settings-button,
+.settings-button,
 .scenes-button,
 .renderer-button {
   font: inherit;

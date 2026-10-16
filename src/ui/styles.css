@@ -9,3 +9,7 @@ body {
 #gpu-canvas {
     display: none;
 }
+
+canvas {
+    display: block;
+}

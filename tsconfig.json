@@ -26,6 +26,8 @@
     "verbatimModuleSyntax": false,
     "moduleDetection": "force",
     "noEmit": true,
+    "sourceMap": true,
+
 
   },
   "include": ["src"]
