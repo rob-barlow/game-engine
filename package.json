@@ -8,13 +8,15 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc --outDir dev/www/js",
+    "build-prod": "tsc --outDir prod/www/js",
     "update": "rmdir /S /Q \"dev/www/js\" & npm run build",
     "update-html": "copy src\\ui\\* dev\\www /y ",
+    "update-html-prod": "copy src\\ui\\* prod\\www /y ",
     "publish": "robocopy dev/www prod/www /MIR",
     "serve-dev": "npx http-server --port 10 -c-1 dev\\www",
     "serve-prod": "npx http-server --port 8080 -c-1 prod\\www",
     "test": "vitest run",
-    "on-commit": "npm run build && npm run update-html && npm run publish"
+    "on-commit": "npm run build-prod && npm run update-html-prod"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
