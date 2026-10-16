@@ -10,7 +10,7 @@
 		"watch_dir": "src"
 	},
   "assets": {
-    "directory": "./dist",
+    "directory": "./prod/www",
     "binding": "ASSETS"
   }
 }
