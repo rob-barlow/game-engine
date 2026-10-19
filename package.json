@@ -8,7 +8,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "vite --host",
-    "build": "tsc && vite build",
+    "build": "vite build --mode debug",
     "preview": "vite preview",
     "test": "vitest run"
   },

@@ -4,7 +4,7 @@ import { Panel } from "../../game-objects/Panel";
 import { Scene } from "../../Scene";
 import { addPlayer } from "../Extensions";
 
-export function createRabbitScene(): {scene: Scene, controllers: Controller[]} {
+export function createTestScene(): {scene: Scene, controllers: Controller[]} {
     const scene = new Scene();
 
     let panelTransform1: Transform = {

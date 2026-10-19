@@ -44,31 +44,19 @@ export default class DomEventListener {
 
     addSceneEventListeners(onSceneMenu: () => void, onSceneChange: (scene: Scenes) => void){
         const scenesMenuButton = document.querySelector(".scenes-button") as HTMLElement;
-
-        const scenes = document.querySelectorAll(".scene-option");
-
-        scenes.forEach(scene => {
-            const sceneName = scene.getAttribute("data-scene") as string as keyof typeof Scenes;
-            const sceneEnum = Scenes[sceneName]; 
-            scene.addEventListener("click", () => {
-                onSceneChange(sceneEnum);
-            });
-        })
-
-
-        const mazeSceneButton = document.getElementById("maze-scene") as HTMLElement;
-        const rabbitSceneButton = document.getElementById("rabbit-scene") as HTMLElement;
-
         scenesMenuButton.addEventListener("click", () => {
             onSceneMenu();
         });
 
-        mazeSceneButton.addEventListener("click", () => {
-            onSceneChange(Scenes.Maze)
-        })
-        
-        rabbitSceneButton.addEventListener("click", () => {
-            onSceneChange(Scenes.Rabbit)
+        const scenes = document.querySelectorAll(".scene-option");
+
+        scenes.forEach(scene => {
+            const attrib = scene.getAttribute("data-scene")
+            const sceneName = attrib as keyof typeof Scenes;
+            const sceneEnum = Scenes[sceneName]; 
+            scene.addEventListener("click", () => {
+                onSceneChange(sceneEnum);
+            });
         })
     }
 }

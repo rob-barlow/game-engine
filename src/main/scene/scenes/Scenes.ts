@@ -1,7 +1,7 @@
 enum Scenes {
     Maze,
     Rabbit,
-    Depth
+    Test
 }
 
 export default Scenes

@@ -59,7 +59,7 @@ export default class UiController {
     }
 
     setScene(scene: Scenes){
-        const sceneString: string = Scenes[scene].toLowerCase();
+        const sceneString: string = Scenes[scene];
 
         console.log(`Setting scene to ${sceneString}`)
         const sceneOptions = document.querySelectorAll(".scene-option");

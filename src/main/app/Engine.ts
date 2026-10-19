@@ -7,12 +7,13 @@ import GameState from "./state/GameState";
 import GameStateManager from "./state/GameStateManager";
 import UiController from "../controls/ui/UiController";
 import Scenes from "../scene/scenes/Scenes";
-import { createMazeScene } from "../scene/scenes/MazeScene/MazeScene";
-import { createRabbitScene } from "../scene/scenes/RabbitScene/RabbitScene";
 import RendererType from "../utils/rendererTypes";
 import { Renderer } from "../rendering/Renderer";
 import { CpuRenderer } from "../rendering/CpuRenderer";
 import { GpuRenderer } from "../rendering/GpuRenderer";
+import { createMazeScene } from "../scene/scenes/MazeScene/MazeScene";
+import { createRabbitScene } from "../scene/scenes/RabbitScene/RabbitScene";
+import { createTestScene } from "../scene/scenes/TestScene/TestScene";
 
 export class Engine{
     renderer: Renderer = new CpuRenderer();
@@ -108,8 +109,8 @@ export class Engine{
             case Scenes.Rabbit:
                 ({scene, controllers} = createRabbitScene());
                 break;
-            case Scenes.Depth:
-                ({scene, controllers} = createDepthScene());
+            case Scenes.Test:
+                ({scene, controllers} = createTestScene());
                 break;
                 }
                 
@@ -132,8 +133,4 @@ export class Engine{
                 break;
         }
     }
-}
-
-function createDepthScene(): { scene: Scene; controllers: Controller[]; } {
-    throw new Error("Function not implemented.");
 }
