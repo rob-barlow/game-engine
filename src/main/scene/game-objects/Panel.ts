@@ -12,8 +12,6 @@ const panelVertices: [Vec3, Vec3, Vec3][] = [
     ];
 
 export class Panel extends GameObject {
-    mesh: Mesh;
-
     // collider: BoxCollider = new BoxCollider({x: -0.01, y: -nearPlaneZ * 2.5, z: -0.01}, {x: 1.01, y: 2.5 * nearPlaneZ, z: 1.01})
 
     constructor(transform: Transform, colour: [number, number, number] = [0, 0, 255]){

@@ -9,5 +9,4 @@ export default class Mesh {
         this.triangles = triangles;
         this.colour = colour;
     }
-
 }

@@ -14,6 +14,7 @@ import { GpuRenderer } from "../rendering/GpuRenderer";
 import { createMazeScene } from "../scene/scenes/MazeScene/MazeScene";
 import { createRabbitScene } from "../scene/scenes/RabbitScene/RabbitScene";
 import { createTestScene } from "../scene/scenes/TestScene/TestScene";
+import { createCvScene } from "../scene/scenes/CvScene/CvScene";
 
 export class Engine{
     renderer: Renderer = new CpuRenderer();
@@ -111,6 +112,9 @@ export class Engine{
                 break;
             case Scenes.Test:
                 ({scene, controllers} = createTestScene());
+                break;
+            default:
+                ({scene, controllers} = createCvScene());
                 break;
                 }
                 
