@@ -22,7 +22,7 @@ export class GpuRenderer implements Renderer {
         canvas.height = window.innerHeight;
 
         this.gl = canvas.getContext("webgl") as WebGLRenderingContext;
-        this.gl.clearColor(0.5, 0.5, 0.5, 1.0);
+        this.gl.clearColor(0, 0, 0, 1.0);
                 
         const vertexShader = createShader(this.gl, this.gl.VERTEX_SHADER, vertexShaderSource) as WebGLShader;
         const fragmentShader = createShader(this.gl, this.gl.FRAGMENT_SHADER, fragmentShaderSource) as WebGLShader;

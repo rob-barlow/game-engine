@@ -1,4 +1,4 @@
-import MeshData from "./MeshFiles/MeshData"
-import rabbitMeshData from "./MeshFiles/RabbitMeshData";
+import MeshData from "./MeshData/MeshData"
+import rabbitMeshData from "./MeshData/RabbitMeshData";
 
 export const RabbitMesh = MeshData.meshDataToMesh(rabbitMeshData);

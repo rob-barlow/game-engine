@@ -1,10 +1,16 @@
 import { GameObject } from "./GameObject";
 import { Transform } from "../../maths";
-import Mesh from "../../meshes/Mesh";
+import LetterMesh from "../../meshes/Text/LetterMesh";
 
 export class Letter extends GameObject {
-    constructor(transform: Transform, colour: [number, number, number] = [0, 0, 255], mesh: Mesh){
+    constructor(transform: Transform, char: string);
+    constructor(transform: Transform, char: string, colour?: [number, number, number]){
         super(transform);
-        this.mesh = mesh;
+
+        this.mesh = LetterMesh.getLetterMesh(char);
+
+        if (colour){
+            this.mesh.colour = colour;
+        }
     }
 }
