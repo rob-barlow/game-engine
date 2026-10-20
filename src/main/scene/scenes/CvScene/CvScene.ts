@@ -5,11 +5,9 @@ import { Letter } from "../../game-objects/Letter";
 import { Scene } from "../../Scene";
 import { addPlayer } from "../Extensions";
 
-let cvText = "hello I'm rob"
-cvText = cvText.toUpperCase();
+const cvText = "hello I'm rob\nnew line aaa"
 
 const letterGap = 7
-const centerOffset = 53
 
 export function createCvScene(): {scene: Scene, controllers: Controller[]} {
     const scene = new Scene();
@@ -23,19 +21,44 @@ export function createCvScene(): {scene: Scene, controllers: Controller[]} {
 
 
 function addLetters(scene: Scene) {
-    for (let charIndex = 0; charIndex < cvText.length; charIndex++){
-        const currentChar = cvText[charIndex];
+    // split by line
+    const upperCvText = cvText.toUpperCase();
+    const cvLines: string[] = upperCvText.split("\n");
 
-        if (currentChar == " ") continue;
+    let xPosition = 0;
+    let yPosition = 1;
+
+    for (let rowIndex = 0; rowIndex < cvLines.length; rowIndex++){
+        const row = cvLines[rowIndex]
+        const rowStartX = -(row.length * 7)/2;
         
-        const letterTransform: Transform = {
-            position: {x: charIndex * letterGap - centerOffset, y: 1, z: 50},
-            orientation: Matrix3.identity(),
-            scale: {x: 1, y: 1, z: 1},
+        xPosition = rowStartX
+        for (let charIndex = 0; charIndex < row.length; charIndex++){
+            const currentChar = row[charIndex];
+
+            if (currentChar == " ") {
+                xPosition += letterGap;
+                continue;
+            }
+
+            if (currentChar == "\n") {
+                xPosition = rowStartX;
+                yPosition -= 7 + letterGap
+                continue;
+            }
+            
+            const letterTransform: Transform = {
+                position: {x: xPosition, y: yPosition, z: 50},
+                orientation: Matrix3.identity(),
+                scale: {x: 1, y: 1, z: 1},
+            }
+
+            const letter: GameObject = new Letter(letterTransform, currentChar)
+            scene.add(letter);
+            
+            xPosition += letterGap;
         }
 
-        const letter: GameObject = new Letter(letterTransform, currentChar)
-        scene.add(letter);
+        yPosition -= 7 + letterGap
     }
-
 }
