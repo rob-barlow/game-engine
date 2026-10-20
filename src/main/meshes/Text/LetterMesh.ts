@@ -5,38 +5,48 @@ import { glyphs } from "./Glyphs";
 const LetterMesh = {
     getLetterMesh(char: string): Mesh {
         const bitmap = glyphs[char]
-        let triangles: [Vec3, Vec3, Vec3][] = [];
+        let faces: [Vec3, Vec3, Vec3, Vec3][] = [];
     
         for (let rowIndex = 0; rowIndex < bitmap.length; rowIndex++){
             const row = bitmap[rowIndex]
             for (let columnIndex = 0; columnIndex < row.length; columnIndex++) {
                 const pos = row[columnIndex];
                 if (pos == "#"){
-                    const voxelTriangles = getVoxelTriangles({x: columnIndex, y: bitmap.length-rowIndex, z: 0});
-                    triangles.push(...voxelTriangles);
+                    const voxelFaces = getVoxelFaces({x: columnIndex, y: bitmap.length-rowIndex, z: 0});
+                    faces.push(...voxelFaces);
                 }
             }
         }
 
-        for (let i = 0; i < triangles.length; i++){
-            const currentTriangle = triangles[i];
+        for (let i = 0; i < faces.length; i++){
+            const currentFace = faces[i];
 
-            for (let j = 0; j < triangles.length; j++){
+            for (let j = 0; j < faces.length; j++){
                 if (i == j) continue;
-                const otherTriangle = triangles[j]
 
-                for (let vertexIndex = 0; vertexIndex < 3; vertexIndex++){
-                    const currentVertex = currentTriangle[vertexIndex];
-                    if (!otherTriangle.includes(currentVertex)){
+                const otherFace = faces[j]
+
+                for (let vertexIndex = 0; vertexIndex < 4; vertexIndex++){
+                    const currentVertex = currentFace[vertexIndex];
+                    if (otherFace.every(otherVertex => {
+                        return !(otherVertex.x == currentVertex.x &&
+                        otherVertex.y == currentVertex.y &&
+                        otherVertex.z == currentVertex.z)
+                    })){
                         break;
                     }
 
-                    if (vertexIndex == 2){
-                        triangles = triangles.filter(t => t != currentTriangle && t != otherTriangle)
+                    if (vertexIndex == 3){
+                        faces = faces.filter(t => t != currentFace && t != otherFace)
                     }
                 }
             }
         }
+
+        const triangles: [Vec3, Vec3, Vec3][] = [];
+        faces.forEach(face => {
+            triangles.push([face[0], face[1], face[2]], [face[0], face[2], face[3]]);
+        })
 
         return {
             triangles: triangles,
@@ -49,8 +59,8 @@ const LetterMesh = {
 
 export default LetterMesh;
 
-function getVoxelTriangles(origin: Vec3){
-    let triangles: [Vec3, Vec3, Vec3][] = [];
+function getVoxelFaces(origin: Vec3): [Vec3, Vec3, Vec3, Vec3][] {
+    const faces: [Vec3, Vec3, Vec3, Vec3][] = [];
 
     const frontFaceVertices = [
         {x: 0, y: 0, z: 0},
@@ -97,21 +107,16 @@ function getVoxelTriangles(origin: Vec3){
     const vertices = [frontFaceVertices, rearFaceVertices, topFaceVertices, bottomFaceVertices, leftFaceVertices, rightFaceVertices];
 
     vertices.forEach(faceVertices => {
-        const t1: [Vec3, Vec3, Vec3] = [
+        const face: [Vec3, Vec3, Vec3, Vec3] = [
             Vec3.add(origin, faceVertices[0]),
             Vec3.add(origin, faceVertices[1]),
-            Vec3.add(origin, faceVertices[2])
-        ]
-
-        
-        const t2: [Vec3, Vec3, Vec3] = [
             Vec3.add(origin, faceVertices[2]),
-            Vec3.add(origin, faceVertices[3]),
-            Vec3.add(origin, faceVertices[0])
+            Vec3.add(origin, faceVertices[3])
         ]
     
-        triangles.push(t1, t2);
+        faces.push(face);
     })
 
-     return triangles;    
+
+    return faces;
 }
