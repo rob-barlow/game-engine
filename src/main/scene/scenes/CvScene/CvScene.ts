@@ -23,7 +23,8 @@ function addLetters(scene: Scene) {
     const cvLines: string[] = getCvRows();
 
     let xPosition = 0;
-    let yPosition = 10;
+    let yPosition = 1;
+    // let yPosition = 10;
     let zPosition = 20;
 
     for (let rowIndex = 0; rowIndex < cvLines.length; rowIndex++){
@@ -100,5 +101,8 @@ function getCvRows(){
         }
     }
 
+    const currentRow = cvText.substring(currentRowStartIndex)
+    rows.push(currentRow)
+            
     return rows;
 }

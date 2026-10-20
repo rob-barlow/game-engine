@@ -9,11 +9,20 @@ const LetterMesh = {
     
         for (let rowIndex = 0; rowIndex < bitmap.length; rowIndex++){
             const row = bitmap[rowIndex]
+            let xStartOfVoxel = undefined;
+            //let numOfAdjacent = 1;
             for (let columnIndex = 0; columnIndex < row.length; columnIndex++) {
                 const pos = row[columnIndex];
                 if (pos == "#"){
-                    const voxelFaces = getVoxelFaces({x: columnIndex, y: bitmap.length-rowIndex, z: 0});
-                    faces.push(...voxelFaces);
+                    if (!xStartOfVoxel){
+                        xStartOfVoxel = columnIndex;
+                    }
+
+                    if (columnIndex == row.length - 1 || row[columnIndex + 1] != "#"){
+                        const voxelFaces = getVoxelFaces({x: xStartOfVoxel, y: bitmap.length-rowIndex, z: 0}, 1 + columnIndex - xStartOfVoxel);
+                        faces.push(...voxelFaces);
+                        xStartOfVoxel = undefined;
+                    }
                 }
             }
         }
@@ -59,19 +68,19 @@ const LetterMesh = {
 
 export default LetterMesh;
 
-function getVoxelFaces(origin: Vec3): [Vec3, Vec3, Vec3, Vec3][] {
+function getVoxelFaces(origin: Vec3, length: number): [Vec3, Vec3, Vec3, Vec3][] {
     const faces: [Vec3, Vec3, Vec3, Vec3][] = [];
 
     const frontFaceVertices = [
         {x: 0, y: 0, z: 0},
         {x: 0, y: 1, z: 0},
-        {x: 1, y: 1, z: 0},
-        {x: 1, y: 0, z: 0},
+        {x: length, y: 1, z: 0},
+        {x: length, y: 0, z: 0},
     ]
 
     const rearFaceVertices = [
-        {x: 1, y: 0, z: 1},
-        {x: 1, y: 1, z: 1},
+        {x: length, y: 0, z: 1},
+        {x: length, y: 1, z: 1},
         {x: 0, y: 1, z: 1},
         {x: 0, y: 0, z: 1},
     ]
@@ -79,13 +88,13 @@ function getVoxelFaces(origin: Vec3): [Vec3, Vec3, Vec3, Vec3][] {
     const topFaceVertices = [
         {x: 0, y: 1, z: 0},
         {x: 0, y: 1, z: 1},
-        {x: 1, y: 1, z: 1},
-        {x: 1, y: 1, z: 0},
+        {x: length, y: 1, z: 1},
+        {x: length, y: 1, z: 0},
     ]
 
     const bottomFaceVertices = [
-        {x: 1, y: 0, z: 0},
-        {x: 1, y: 0, z: 1},
+        {x: length, y: 0, z: 0},
+        {x: length, y: 0, z: 1},
         {x: 0, y: 0, z: 1},
         {x: 0, y: 0, z: 0},
     ]
@@ -98,10 +107,10 @@ function getVoxelFaces(origin: Vec3): [Vec3, Vec3, Vec3, Vec3][] {
     ]
 
     const rightFaceVertices = [
-        {x: 1, y: 0, z: 0},
-        {x: 1, y: 1, z: 0},
-        {x: 1, y: 1, z: 1},
-        {x: 1, y: 0, z: 1},
+        {x: length, y: 0, z: 0},
+        {x: length, y: 1, z: 0},
+        {x: length, y: 1, z: 1},
+        {x: length, y: 0, z: 1},
     ]
 
     const vertices = [frontFaceVertices, rearFaceVertices, topFaceVertices, bottomFaceVertices, leftFaceVertices, rightFaceVertices];
