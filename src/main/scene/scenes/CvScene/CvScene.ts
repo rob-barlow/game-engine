@@ -5,7 +5,7 @@ import { Letter } from "../../game-objects/Letter";
 import { Scene } from "../../Scene";
 import { addPlayer } from "../Extensions";
 
-const letterSize = 1/10
+const letterSize = 1/5;
 const letterGap = 7 * letterSize
 
 export function createCvScene(): {scene: Scene, controllers: Controller[]} {
@@ -23,7 +23,7 @@ function addLetters(scene: Scene) {
     const cvLines: string[] = getCvRows();
 
     let xPosition = 0;
-    let yPosition = 1;
+    let yPosition = 10;
     let zPosition = 20;
 
     for (let rowIndex = 0; rowIndex < cvLines.length; rowIndex++){
@@ -56,9 +56,16 @@ function addLetters(scene: Scene) {
             
             xPosition += letterGap;
         }
-
+        
         yPosition -= letterSize + letterGap
     }
+
+    let numOfTriangles = 0;
+    scene.gameObjects.forEach(gameObj => {
+        numOfTriangles += gameObj.mesh.triangles.length;
+    })
+
+    console.log("Number of triangles: " + numOfTriangles);
 }
 
 function getCvRows(){
@@ -66,7 +73,16 @@ function getCvRows(){
     "ern web technologies. Experienced in collaborating within development teams, communicating technical concepts" +
     "clearly, and contributing across the software development lifecycle. Particularly interested in networking, low-level" +
     "programming, hardware, and performance-focused systems. Currently developing skills in Kubernetes, CPU-based" +
-    "3D rendering, Rust, Arduino programming and Agrentic development."
+    "3D rendering, Rust, Arduino programming and Agrentic development." +
+    "Education\n" + 
+    "University of Warwick\n" +
+    "BSc Mathematics First-Class Honours\n" +
+    "Experience\n" +
+    "Software Developer\n" +
+    "Dorset Software\n" +
+    "2020-2024\n" +
+    "May 2025-present\n" +
+    "Collaborated in a four-developer team to design and implement a full-stack web application comprising a Blazor"
 
     cvText = cvText.toUpperCase();
     const rows = []
@@ -76,8 +92,7 @@ function getCvRows(){
     for (let textIndex = 0; textIndex < cvText.length; textIndex++){
         currentRowCharCount++;
         const currentChar = cvText[textIndex];
-
-        if (currentChar == " " && currentRowCharCount > 50){
+        if ((currentChar == "\n") || (currentChar == " " && currentRowCharCount > 50)){
             const currentRow = cvText.substring(currentRowStartIndex, textIndex)
             rows.push(currentRow)
             currentRowStartIndex = textIndex + 1;

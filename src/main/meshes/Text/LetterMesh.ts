@@ -5,7 +5,7 @@ import { glyphs } from "./Glyphs";
 const LetterMesh = {
     getLetterMesh(char: string): Mesh {
         const bitmap = glyphs[char]
-        const triangles: [Vec3, Vec3, Vec3][] = [];
+        let triangles: [Vec3, Vec3, Vec3][] = [];
     
         for (let rowIndex = 0; rowIndex < bitmap.length; rowIndex++){
             const row = bitmap[rowIndex]
@@ -14,6 +14,26 @@ const LetterMesh = {
                 if (pos == "#"){
                     const voxelTriangles = getVoxelTriangles({x: columnIndex, y: bitmap.length-rowIndex, z: 0});
                     triangles.push(...voxelTriangles);
+                }
+            }
+        }
+
+        for (let i = 0; i < triangles.length; i++){
+            const currentTriangle = triangles[i];
+
+            for (let j = 0; j < triangles.length; j++){
+                if (i == j) continue;
+                const otherTriangle = triangles[j]
+
+                for (let vertexIndex = 0; vertexIndex < 3; vertexIndex++){
+                    const currentVertex = currentTriangle[vertexIndex];
+                    if (!otherTriangle.includes(currentVertex)){
+                        break;
+                    }
+
+                    if (vertexIndex == 2){
+                        triangles = triangles.filter(t => t != currentTriangle && t != otherTriangle)
+                    }
                 }
             }
         }
@@ -30,7 +50,7 @@ const LetterMesh = {
 export default LetterMesh;
 
 function getVoxelTriangles(origin: Vec3){
-    const triangles: [Vec3, Vec3, Vec3][] = [];
+    let triangles: [Vec3, Vec3, Vec3][] = [];
 
     const frontFaceVertices = [
         {x: 0, y: 0, z: 0},
@@ -93,5 +113,5 @@ function getVoxelTriangles(origin: Vec3){
         triangles.push(t1, t2);
     })
 
-    return triangles;    
+     return triangles;    
 }
