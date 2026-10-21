@@ -129,7 +129,6 @@ function getVoxelFaces(origin: Vec3, length: number): [Vec3, Vec3, Vec3, Vec3][]
         {x: length, y: 0, z: 1},
     ]
 
-    // const vertices = [frontFaceVertices, rearFaceVertices, topFaceVertices, bottomFaceVertices, leftFaceVertices, rightFaceVertices];
     const vertices = [frontFaceVertices];
 
     vertices.forEach(faceVertices => {
