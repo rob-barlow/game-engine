@@ -63,7 +63,19 @@ const LetterMesh = {
         };
     },
 
-    
+    combineLetterMeshes(meshes: Mesh[]): Mesh {
+        const colour = meshes[0].colour;
+        const triangles = [];
+
+        meshes.forEach(mesh => {
+            triangles.push(mesh.triangles);
+        })
+
+        return {
+            triangles: [],
+            colour: colour
+        }
+    }
 }
 
 export default LetterMesh;

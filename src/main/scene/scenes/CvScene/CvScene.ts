@@ -2,6 +2,7 @@ import { Controller } from "../../../controls/in-game/controllers/Controller";
 import { Matrix3, Transform } from "../../../maths/index";
 import { GameObject } from "../../game-objects";
 import { Letter } from "../../game-objects/Letter";
+import { TextObject } from "../../game-objects/TextObject";
 import { Scene } from "../../Scene";
 import { addPlayer } from "../Extensions";
 
@@ -11,7 +12,7 @@ const letterGap = 7 * letterSize
 export function createCvScene(): {scene: Scene, controllers: Controller[]} {
     const scene = new Scene();
 
-    addLetters(scene)
+    addText(scene)
 
     const playerController = addPlayer(scene);
 
@@ -19,12 +20,12 @@ export function createCvScene(): {scene: Scene, controllers: Controller[]} {
 }
 
 
-function addLetters(scene: Scene) {
+function addText(scene: Scene) {
     const cvLines: string[] = getCvRows();
+    const letters: Letter[] = []
 
     let xPosition = 0;
-    let yPosition = 1;
-    // let yPosition = 10;
+    let yPosition = 10;
     let zPosition = 20;
 
     for (let rowIndex = 0; rowIndex < cvLines.length; rowIndex++){
@@ -53,7 +54,7 @@ function addLetters(scene: Scene) {
             }
 
             const letter: GameObject = new Letter(letterTransform, currentChar)
-            scene.add(letter);
+            letters.push(letter)
             
             xPosition += letterGap;
         }
@@ -66,7 +67,19 @@ function addLetters(scene: Scene) {
         numOfTriangles += gameObj.mesh.triangles.length;
     })
 
-    console.log("Number of triangles: " + numOfTriangles);
+    
+    const textTransform: Transform = {
+        position: {x: 0, y: 10, z: 20},
+            orientation: Matrix3.identity(),
+            scale: {x: letterSize, y: letterSize, z: letterSize},
+        }
+        
+    const text: GameObject = new TextObject(textTransform, letters)
+    console.log("Number of letters: " + letters.length);
+
+    console.log("Number of triangles: " + text.mesh.triangles.length);
+
+    scene.add(text)
 }
 
 function getCvRows(){
