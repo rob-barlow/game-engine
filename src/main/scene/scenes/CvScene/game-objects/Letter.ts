@@ -1,6 +1,6 @@
-import { GameObject } from "./GameObject";
-import { Transform } from "../../maths";
-import LetterMesh from "../../meshes/Text/LetterMesh";
+import { GameObject } from "../../../game-objects/GameObject";
+import { Transform } from "../../../../maths";
+import LetterMesh from "../../../../meshes/Text/LetterMesh";
 
 export class Letter extends GameObject {
     constructor(transform: Transform, char: string);

@@ -1,8 +1,8 @@
-import GameSettings from "../../../app/GameSettings";
-import { Intent } from "../../../maths/Intent";
-import { GameObject } from "../../../scene/game-objects/GameObject";
-import { Controller } from "./Controller";
-import InputReader from "../InputReader";
+import GameSettings from "../../../../app/GameSettings";
+import { Intent } from "../../../../maths/Intent";
+import { GameObject } from "../../../game-objects/GameObject";
+import { Controller } from "../../../../controls/in-game/controllers/Controller";
+import InputReader from "../../../../controls/in-game/InputReader";
 
 export class TextController implements Controller {
     target: GameObject;

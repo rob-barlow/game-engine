@@ -1,7 +1,7 @@
-import { GameObject } from "./GameObject";
-import { Transform, Vec3 } from "../../maths";
+import { GameObject } from "../../../game-objects/GameObject";
+import { Transform, Vec3 } from "../../../../maths";
 import { Letter } from "./Letter";
-import TextScrollMovementSystem from "../../controls/in-game/movement-systems/TextScrollMovementSystem";
+import TextScrollMovementSystem from "../movement-systems/TextScrollMovementSystem";
 
 export class TextObject extends GameObject {
     movementSystem = new TextScrollMovementSystem();

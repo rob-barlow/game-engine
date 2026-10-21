@@ -1,8 +1,8 @@
-import { Matrix3, Vec3 } from "../../../maths/index";
-import { Intent } from "../../../maths/Intent";
-import { Scene } from "../../../scene/Scene";
-import MovementSystem from "./MovementSystem";
-import { GameObject } from "../../../scene/game-objects/index";
+import { Matrix3, Vec3 } from "../../../../maths/index";
+import { Intent } from "../../../../maths/Intent";
+import { Scene } from "../../../Scene";
+import MovementSystem from "../../../../controls/in-game/movement-systems/MovementSystem";
+import { GameObject } from "../../../game-objects/index";
 
 const scrollSpeed = 1;
 
