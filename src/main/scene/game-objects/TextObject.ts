@@ -1,9 +1,11 @@
 import { GameObject } from "./GameObject";
 import { Transform, Vec3 } from "../../maths";
-import LetterMesh from "../../meshes/Text/LetterMesh";
 import { Letter } from "./Letter";
+import TextScrollMovementSystem from "../../controls/in-game/movement-systems/TextScrollMovementSystem";
 
 export class TextObject extends GameObject {
+    movementSystem = new TextScrollMovementSystem();
+
     constructor(transform: Transform, letters: Letter[]){
         super(transform);
 

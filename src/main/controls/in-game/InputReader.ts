@@ -1,9 +1,9 @@
 import { ArrowKey, WasdKey } from "../../utils/types";
 
 export default class InputReader {
-    inputBuffer: (WasdKey | ArrowKey)[] = [];
+    inputBuffer: (WasdKey | ArrowKey | " " | "shift")[] = [];
 
-    lastPressed: (WasdKey | ArrowKey)[] = [];
+    lastPressed: (WasdKey | ArrowKey | " " | "shift")[] = [];
 
     isPointerLocked: boolean = false;
     pointerLockChanged: boolean = false;
@@ -32,6 +32,8 @@ export default class InputReader {
                 case 'a':
                 case 's':
                 case 'd':
+                case ' ':
+                case 'shift':
                     if (!this.inputBuffer.includes(keyPressed)){
                         this.inputBuffer.push(keyPressed);
                     }
@@ -52,6 +54,8 @@ export default class InputReader {
                 case 'a':
                 case 's':
                 case 'd':
+                case ' ':
+                case 'shift':
                     this.lastPressed.push(keyPressed);
 
                     const index = this.inputBuffer.indexOf(keyPressed);
