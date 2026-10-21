@@ -7,6 +7,10 @@ const LetterMesh = {
         const bitmap = glyphs[char]
         let faces: [Vec3, Vec3, Vec3, Vec3][] = [];
     
+        if (!bitmap){
+            console.log("YO")
+        }
+
         for (let rowIndex = 0; rowIndex < bitmap.length; rowIndex++){
             const row = bitmap[rowIndex]
             let xStartOfVoxel = undefined;
@@ -125,7 +129,8 @@ function getVoxelFaces(origin: Vec3, length: number): [Vec3, Vec3, Vec3, Vec3][]
         {x: length, y: 0, z: 1},
     ]
 
-    const vertices = [frontFaceVertices, rearFaceVertices, topFaceVertices, bottomFaceVertices, leftFaceVertices, rightFaceVertices];
+    // const vertices = [frontFaceVertices, rearFaceVertices, topFaceVertices, bottomFaceVertices, leftFaceVertices, rightFaceVertices];
+    const vertices = [frontFaceVertices];
 
     vertices.forEach(faceVertices => {
         const face: [Vec3, Vec3, Vec3, Vec3] = [
