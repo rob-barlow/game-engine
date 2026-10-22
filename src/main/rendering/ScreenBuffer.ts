@@ -11,7 +11,7 @@ export class ScreenBuffer{
     depthBuffer: Uint8ClampedArray<ArrayBuffer>;
     imageData: ImageData
 
-    constructor(canvasWidth: number, canvasHeight: number, fillValue: number){
+    constructor(canvasWidth: number, canvasHeight: number, fillValue: number = 0){
         this.rowLength = canvasWidth
         this.columnLength = canvasHeight
         this.backgroundColour = fillValue;
@@ -25,7 +25,13 @@ export class ScreenBuffer{
     }
 
     resetBuffer(){
-        this.screenBuffer.fill(this.backgroundColour);
+        this.screenBuffer.fill(1);
+        this.screenBuffer.forEach((rgba, rgbaIndex) => {
+            if (rgbaIndex % 4 == 3){
+                this.screenBuffer[rgbaIndex] = 255
+            }
+        })
+
         this.depthBuffer.fill(100); // another slow line
     }
 
@@ -54,24 +60,25 @@ export class ScreenBuffer{
         let screenBufferArrayIndex = arrayIndex * 4
         
         let depth = startDepth
-        let colourScale = depth * 30
         const depthIncrement = endColumn == startColumn ? 0 : (endDepth - startDepth)/(endColumn - startColumn)
-        const colourScaleIncrement = depthIncrement * 30
+        
+        // let colourScale = (depth * 30)/2
+        // const colourScaleIncrement = depthIncrement * 30
         for (let _column = startColumn; _column <= endColumn; _column ++)
         {
             if (depth < depthBuffer[arrayIndex]){
                 depthBuffer[arrayIndex] = depth
 
-                screenBuffer[screenBufferArrayIndex] = r - colourScale
-                screenBuffer[screenBufferArrayIndex + 1] = g - colourScale
-                screenBuffer[screenBufferArrayIndex + 2] = b - colourScale
+                screenBuffer[screenBufferArrayIndex] = r// - colourScale
+                screenBuffer[screenBufferArrayIndex + 1] = g 
+                screenBuffer[screenBufferArrayIndex + 2] = b// + colourScale
                 screenBuffer[screenBufferArrayIndex + 3] = 255
             }   
 
             arrayIndex ++
             screenBufferArrayIndex += 4
             depth += depthIncrement
-            colourScale += colourScaleIncrement
+            // colourScale += colourScaleIncrement
         }
     }
 }

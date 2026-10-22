@@ -31,7 +31,7 @@ export class CpuRenderer implements Renderer {
             height: canvas.height
         };
 
-        this.screenBuffer = new ScreenBuffer(this.size.width, this.size.height, 128)
+        this.screenBuffer = new ScreenBuffer(this.size.width, this.size.height)
         this.projectionMatrix = Transform.getProjectionMatrix(this.size)
         this.viewportMatrix = Transform.getViewportMatrix(this.size)
     }
