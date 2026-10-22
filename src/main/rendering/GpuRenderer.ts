@@ -34,6 +34,9 @@ export class GpuRenderer implements Renderer {
         this.gl.enableVertexAttribArray(positionAttributeLocation);
         this.gl.vertexAttribPointer(positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
         
+        this.gl.enable(this.gl.DEPTH_TEST);
+        this.gl.depthFunc(this.gl.LESS);
+        
         this.colourBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colourBuffer);
 
@@ -41,8 +44,6 @@ export class GpuRenderer implements Renderer {
         this.gl.enableVertexAttribArray(colourAttributeLocation);
         this.gl.vertexAttribPointer(colourAttributeLocation, 4, this.gl.FLOAT, false, 0, 0);
 
-        this.gl.enable(this.gl.DEPTH_TEST);
-        this.gl.depthFunc(this.gl.LESS);
 
         this.size = {
             width: canvas.width,
@@ -131,7 +132,7 @@ const vertexShaderSource = `
     varying lowp vec4 vColour;
 
    void main() {
-       gl_Position = vec4(aVertexPosition.x, aVertexPosition.y, 0.0, 1.0);
+       gl_Position = vec4(aVertexPosition.x, aVertexPosition.y, aVertexPosition.z, 1.0);
        vColour = aVertexColour;
    }
 `;
