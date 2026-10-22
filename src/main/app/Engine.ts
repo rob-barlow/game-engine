@@ -24,6 +24,9 @@ export class Engine{
     inputReader: InputReader = new InputReader()
 
     lastFrameTimestamp: number = 0;
+    lastSecondTimestamp: number = 0;
+    frames: number = 0;
+    fpsElement: HTMLElement = document.getElementById("fps");
 
     gameStateManager: GameStateManager
     gameSettings: GameSettings = new GameSettings()
@@ -75,6 +78,7 @@ export class Engine{
     }
 
     frame = (now: number) => {
+        this.frames++;
         const dt = Math.min((now - this.lastFrameTimestamp) / 1000, 0.3);
         this.lastFrameTimestamp = now;
 
@@ -83,7 +87,13 @@ export class Engine{
         switch (this.gameStateManager.state){
             case GameState.PlayingMazdle:
                 this.updateGame(dt);
-                this.renderer.render(this.scene, Math.trunc(1/dt));
+                this.renderer.render(this.scene);
+     
+                if (now - this.lastSecondTimestamp >= 1000) {
+                    this.fpsElement.textContent = `${this.frames} FPS`;
+                    this.frames = 0;
+                    this.lastSecondTimestamp = now;
+                }
                 break;
             case GameState.MainMenu:
                 break;

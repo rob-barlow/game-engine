@@ -13,3 +13,11 @@ body {
 canvas {
     display: block;
 }
+
+#fps {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 5px 10px;
+    color: white;
+}

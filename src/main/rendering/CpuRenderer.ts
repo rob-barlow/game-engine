@@ -36,10 +36,10 @@ export class CpuRenderer implements Renderer {
         this.viewportMatrix = Transform.getViewportMatrix(this.size)
     }
 
-    public render(scene: Scene, fps: number | undefined = undefined){
+    public render(scene: Scene){
         this.screenBuffer.resetBuffer();
         const camera = scene.activeCamera;
-        const triangles: [Vec3, Vec3, Vec3][] = []
+        //const triangles: [Vec3, Vec3, Vec3][] = []
 
         const gameObjects = scene.gameObjects
         
@@ -80,11 +80,6 @@ export class CpuRenderer implements Renderer {
         // })    
 
         this.drawBuffer();
-
-        if (fps) this.ctx.fillText("fps: " + fps.toString(), 5, 10) 
-        this.ctx.fillText("triangles: " + triangles.length.toString(), 5, 20) 
-        this.ctx.fillText("x: " + Math.trunc(camera.transform.position.x) + " z: " + Math.trunc(camera.transform.position.z), 5, 30) 
-        // this.ctx.fillText("objects: " + gameObjects.length.toString(), 5, 30) 
     }
 
     private drawTriangle(p1: RasterVertex, p2: RasterVertex, p3: RasterVertex, colour: [number, number, number] = [0, 0, 255]){  

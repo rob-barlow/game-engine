@@ -1,5 +1,4 @@
 import { Matrix4, Transform, Vec2, Vec3, Vec4 } from "../maths/index";
-import { RasterVertex } from "../maths/RasterVertex";
 import { Scene } from "../scene/Scene";
 import { CanvasSize } from "../utils/types";
 import { Projection } from "./Projection";
@@ -13,7 +12,6 @@ export class GpuRenderer implements Renderer {
     size: CanvasSize;
     projectionMatrix: Matrix4
     viewportMatrix: Matrix4
-    
 
     constructor(){
         const canvas = document.getElementById("gpu-canvas") as HTMLCanvasElement;
@@ -62,15 +60,15 @@ export class GpuRenderer implements Renderer {
         const triangles: [Vec3, Vec3, Vec3][] = []
         const colours: number[] = []
 
-        const gameObjects = scene.gameObjects
+        const gameObjects = scene.gameObjects;
         
         const cameraMatrix = Transform.getInverseWorldMatrix(camera.transform);
         const projectionMatrix = this.projectionMatrix;
         const viewportMatrix = this.viewportMatrix;
         
         gameObjects.forEach(gameObject => {
-            if (!gameObject.mesh) return
-            
+            if (!gameObject.mesh) return;
+
             Projection.projectTriangles(gameObject.mesh.triangles, gameObject.transform, cameraMatrix, projectionMatrix, viewportMatrix).forEach(triangle => {
                 const currentTriangle: [Vec3, Vec3, Vec3] = [
                     {x: triangle[0].clipPosition.x, y: triangle[0].clipPosition.y, z: triangle[0].viewZ/100},
@@ -100,6 +98,7 @@ export class GpuRenderer implements Renderer {
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colourBuffer);
         this.gl.bufferData(this.gl.ARRAY_BUFFER, coloursData, this.gl.STATIC_DRAW);
 
+        // this.gl.POINTS
         this.gl.drawArrays(this.gl.TRIANGLES, 0, verticesData.length / 3);
     }
 
@@ -126,8 +125,8 @@ export class GpuRenderer implements Renderer {
 }
 
 const vertexShaderSource = `
-   attribute vec4 aVertexPosition;
-   attribute vec4 aVertexColour;
+    attribute vec4 aVertexPosition;
+    attribute vec4 aVertexColour;
 
     varying lowp vec4 vColour;
 
