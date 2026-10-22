@@ -53,7 +53,7 @@ export class GpuRenderer implements Renderer {
         this.viewportMatrix = Transform.getViewportMatrix(this.size)
     }
 
-    public render(scene: Scene, fps: number | undefined = undefined){
+    public render(scene: Scene){
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
         
         const camera = scene.activeCamera;

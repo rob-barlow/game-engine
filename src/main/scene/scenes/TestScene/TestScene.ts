@@ -8,18 +8,18 @@ export function createTestScene(): {scene: Scene, controllers: Controller[]} {
     const scene = new Scene();
 
     let panelTransform1: Transform = {
-        position: {x: 0, y: 1, z: 10},
-        orientation: Matrix3.identity(),
+        position: {x: 0, y: 2, z: 2},
+        orientation: Matrix3.getRotationMatrix("x", -2 * Math.PI * (90/360)),
         scale: {x: 1, y: 1, z: 1},
     }
     scene.add(new Panel(panelTransform1))
 
     let panelTransform2: Transform = {
-        position: {x: 0, y: 1, z: 20},
-        orientation: Matrix3.identity(),
+        position: {x: 0, y: 2, z: 4},
+        orientation:  Matrix3.getRotationMatrix("x", -2 * Math.PI * (90/360)),
         scale: {x: 1, y: 1, z: 1},
     }
-    scene.add(new Panel(panelTransform2, [50, 5, 200]))
+    scene.add(new Panel(panelTransform2, [255, 0, 0]))
 
     const playerController = addPlayer(scene);
 

@@ -130,6 +130,17 @@ export class Engine{
                 
         this.scene = scene;
         this.controllers = controllers
+
+        let numOfTriangles = 0;
+
+        this.scene.gameObjects.forEach(gameObj => {
+            const currentMesh = gameObj.mesh
+            if (currentMesh){
+                numOfTriangles+= currentMesh.triangles.length
+            }
+        })
+
+        console.log("triangles in the scene: " + numOfTriangles);
         
         this.controllers.forEach(controller => {
             controller.setInputReader(this.inputReader)
