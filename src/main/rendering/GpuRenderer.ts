@@ -83,19 +83,9 @@ export class GpuRenderer implements Renderer {
         const numVertices = 6;
 
         // setup matrices, one per instance
-        const numInstances = 100;
-        // make a typed array with one view per matrix
-        this.matrixData = new Float32Array(numInstances * 16);
 
-        this.matrices = [];
-        for (let i = 0; i < numInstances; ++i) {
-            const byteOffsetToMatrix = i * 16 * 4;
-            const numFloatsForView = 16;
-            this.matrices.push(new Float32Array(
-                this.matrixData.buffer,
-                byteOffsetToMatrix,
-                numFloatsForView));
-        }
+        this.createMatrixArray(100);
+        
 
         this.worldMatrixBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.worldMatrixBuffer);
@@ -174,25 +164,19 @@ export class GpuRenderer implements Renderer {
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.worldMatrixBuffer)
 
         const numInstances = worldMatrices.length;
-        this.matrixData = new Float32Array(numInstances * 16);
+        
+        if (this.matrices.length < numInstances){
+            this.createMatrixArray(numInstances)
+        }
 
-        // this.matrices = [];
-        // for (let i = 0; i < numInstances; ++i) {
-        //     const byteOffsetToMatrix = i * 16 * 4;
-        //     const numFloatsForView = 16;
-        //     this.matrices.push(new Float32Array(
-        //         this.matrixData.buffer,
-        //         byteOffsetToMatrix,
-        //         numFloatsForView));
-        // }
-        
-        this.matrices.forEach((mat, ndx) => {
-            const glslMatrix = Matrix4.toGlslArray(worldMatrices[ndx]);
-            for (let i = 0; i < 16; i++){
-                mat[i] = glslMatrix[i];
+        for (let i = 0; i < numInstances; i++){
+            const glslMatrix = Matrix4.toGlslArray(worldMatrices[i]);
+            for (let j = 0; j < 16; j++){
+                this.matrices[i][j] = glslMatrix[j];
             }
-        });
-        
+        };
+
+
         this.gl.bufferData(this.gl.ARRAY_BUFFER, this.matrixData.byteLength, this.gl.DYNAMIC_DRAW);
         this.gl.bufferSubData(this.gl.ARRAY_BUFFER, 0, this.matrixData);
         
@@ -208,121 +192,23 @@ export class GpuRenderer implements Renderer {
         );
     }
 
-    // public render(scene: Scene){
-    //      // webglUtils.resizeCanvasToDisplaySize(gl.canvas);
-    //     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-        
-    //     const camera = scene.activeCamera;
-
-    //     // sort by type for gpu instancing
-    //     const gameObjects = scene.gameObjects.sort((a) => {
-    //         if (a instanceof Panel){
-    //             return 1;
-    //         }
-    //         if (a instanceof Player){
-    //             return 2;
-    //         }
-    //         if (a instanceof Drone){
-    //             return 3;
-    //         }
-    //         if (a instanceof TextObject){
-    //             return 4;
-    //         }
-    //         if (a instanceof Drone){
-    //             return 5;
-    //         }
-            
-    //         return 6;
-    //     });
-        
-        
-    //     // it might be faster to calculate viewProjMatrix and use as a single uniform
-    //     // const viewProjectionMatrix = Matrix4.multiply(this.projectionMatrix, viewMatrix)
-        
-    //     const viewMatrix = Transform.getInverseWorldMatrix(camera.transform);
-    //     this.gl.uniformMatrix4fv(this.viewMatrixLocation, false, Matrix4.toGlslArray(viewMatrix))
-
-
-    //     // const verticesData: Float32Array = new Float32Array([
-    //     //         0,0,0,
-    //     //         0,0,1,
-    //     //         1,0,1,
-    //     //         0,0,0,
-    //     //         1,0,1,
-    //     //         1,0,0
-    //     //     ])
-
-
-        
-
-    //     ///
-
-    //     let currentVerticesData: Float32Array
-    //     let coloursData: Float32Array
-    //     let worldMatricesData: Float32Array
-
-    //     const colours: number[] = []
-    //     const worldMatrices: number[] = []
-
-    //     let numInstances = 0
-
-    //     gameObjects.forEach((gameObject, gameObjectIndex) => {
-    //         if (!gameObject.mesh) return;
-            
-    //         numInstances++;
-
-    //         let colour = gameObject.mesh?.colour.map(c => c / 255);
-    //         colour = colour ? colour : [0, 0, 0];
-            
-    //         for (let i = 0; i < 3 * gameObject.mesh.triangles.length; i++) {
-    //             colours[4 * i] = colour[0];
-    //             colours[(4 * i) + 1] = colour[1];
-    //             colours[(4 * i) + 2] = colour[2];
-    //             colours[(4 * i) + 3] = 1.0;
-    //         }
-
-    //         const worldMatrix = Transform.getWorldMatrix(gameObject.transform)
-    //         worldMatrices.push(...Matrix4.toGlslArray(worldMatrix));
-
-    //         // draw all of a certain game object
-    //         if (typeof(gameObject) != typeof(gameObjects[gameObjectIndex + 1])){
-    //             // set mesh
-    //             currentVerticesData = this.trianglesToArray(gameObject.mesh.triangles)
-    //             coloursData = new Float32Array(colours);
-    //             worldMatricesData = new Float32Array(worldMatrices);
-
-    //             // set vertices
-    //             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
-    //             this.gl.bufferData(this.gl.ARRAY_BUFFER, currentVerticesData, this.gl.STATIC_DRAW);
-
-    //             // set matrix array
-    //             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.worldMatrixBuffer);
-    //             this.gl.bufferData(this.gl.ARRAY_BUFFER, worldMatricesData, this.gl.DYNAMIC_DRAW);
-
-    //             // set colours
-    //             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colourBuffer);
-    //             this.gl.bufferData(this.gl.ARRAY_BUFFER, coloursData, this.gl.STATIC_DRAW);
-
-    //             // draw
-    //             // this.gl.drawArrays(this.gl.TRIANGLES, 0,  / 3);
-    //             const numVertices = currentVerticesData.length / 3;
-    //             this.ext.drawArraysInstancedANGLE(
-    //                 this.gl.TRIANGLES,
-    //                 0,             // offset
-    //                 numVertices,   // num vertices per instance
-    //                 numInstances,  // num instances
-    //                 );
-                
-    //             // reset
-    //             colours.length = 0;
-    //             worldMatrices.length = 0;
-    //             numInstances = 0;
-    //         }
-    //     })  
-    // }
-
     setUniformMatrix(location: WebGLUniformLocation, matrix: Matrix4){
         this.gl.uniformMatrix4fv(location, false, Matrix4.toGlslArray(matrix))
+    }
+
+    createMatrixArray(numInstances: number){
+        // make a typed array with one view per matrix
+        this.matrixData = new Float32Array(numInstances * 16);
+
+        this.matrices = [];
+        for (let i = 0; i < numInstances; ++i) {
+            const byteOffsetToMatrix = i * 16 * 4;
+            const numFloatsForView = 16;
+            this.matrices.push(new Float32Array(
+                this.matrixData.buffer,
+                byteOffsetToMatrix,
+                numFloatsForView));
+        }
     }
 }
 
