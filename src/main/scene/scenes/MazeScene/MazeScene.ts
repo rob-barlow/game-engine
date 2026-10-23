@@ -2,7 +2,6 @@ import { generateMaze } from "../../../../maze-generator/generateMaze";
 import { Controller } from "../../../controls/in-game/controllers/Controller";
 import { Matrix3, Transform, Vec3 } from "../../../maths/index";
 import Boundary from "../../game-objects/Boundary";
-import { GameObject } from "../../game-objects/GameObject";
 import { Panel } from "../../game-objects/Panel";
 import { Scene } from "../../Scene";
 import { PanelDirection } from "../../../utils/types";
@@ -10,8 +9,8 @@ import { addPlayer } from "../Extensions";
 import MazePanelTypes from "./MazePanelTypes";
 
 export function createMazeScene(): {scene: Scene, controllers: Controller[]} {
-    const mazeWidth = 20;
-    const mazeHeight = 20;
+    const mazeWidth = 10;
+    const mazeHeight = 10;
 
     const scene = new Scene();
 
@@ -40,22 +39,21 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
     let startPositionX = 0
     let startPositionZ = 0
 
-    
-    const floorPanelTransform: Transform = {
-        position: {x: 1, y: -0.01, z: 1},
-        orientation: Matrix3.identity(),
-        scale: {x: 2 * maze[0].length, y: 1, z: 2 * maze.length}
-    }
+    // const floorPanelTransform: Transform = {
+    //     position: {x: 1, y: -0.01, z: 1},
+    //     orientation: Matrix3.identity(),
+    //     scale: {x: 2 * maze[0].length, y: 1, z: 2 * maze.length}
+    // }
 
-    flatPanels.push(new Panel(floorPanelTransform, floorColour))
+    // flatPanels.push(new Panel(floorPanelTransform, floorColour))
     
-    const ceilingPanelTransform: Transform = {
-        position: {x: 2 * maze[0].length - 1, y: 3.99, z: 1},
-        orientation: Matrix3.multiply(Matrix3.getRotationMatrix('z', Math.PI), Matrix3.identity()),
-        scale: {x: 2 * maze[0].length, y: 1, z: 2 * maze.length}
-    }
+    // const ceilingPanelTransform: Transform = {
+    //     position: {x: 2 * maze[0].length - 1, y: 3.99, z: 1},
+    //     orientation: Matrix3.multiply(Matrix3.getRotationMatrix('z', Math.PI), Matrix3.identity()),
+    //     scale: {x: 2 * maze[0].length, y: 1, z: 2 * maze.length}
+    // }
 
-    flatPanels.push(new Panel(ceilingPanelTransform, ceilingColour))
+    // flatPanels.push(new Panel(ceilingPanelTransform, ceilingColour))
 
     for (let rowIndex = 0; rowIndex < maze.length; rowIndex++){
         for (let columnIndex = 0; columnIndex < maze[rowIndex].length; columnIndex++){

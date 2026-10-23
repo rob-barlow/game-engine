@@ -1,5 +1,10 @@
 import { Matrix4, Transform, Vec2, Vec3, Vec4 } from "../maths/index";
+import Drone from "../scene/game-objects/Drone";
+import { Panel } from "../scene/game-objects/Panel";
+import Player from "../scene/game-objects/Player";
 import { Scene } from "../scene/Scene";
+import { TextObject } from "../scene/scenes/CvScene/game-objects/TextObject";
+import { farPlaneZ, nearPlaneZ } from "../utils/constants";
 import { CanvasSize } from "../utils/types";
 import { Projection } from "./Projection";
 import { Renderer } from "./Renderer";
@@ -7,11 +12,23 @@ import { Renderer } from "./Renderer";
 export class GpuRenderer implements Renderer {
     positionBuffer: WebGLBuffer
     colourBuffer: WebGLBuffer
+    worldMatrixBuffer: WebGLBuffer
 
-    worldMatrixLocation: WebGLUniformLocation
-    cameraMatrixLocation: WebGLUniformLocation
+
+    projectionMatrix: Matrix4
+
+    positionAttributeLocation: number;
+    colourAttributeLocation: number;
+    worldMatrixAttributeLocation: number;
+
+    viewMatrixUniformLocation: WebGLUniformLocation;
+    projectionMatrixUniformLocation: WebGLUniformLocation;
+
+    matrixData: Float32Array
+    matrices: Float32Array[]
 
     gl: WebGLRenderingContext;
+    ext: ANGLE_instanced_arrays;
     size: CanvasSize;
 
     constructor(){
@@ -25,152 +42,304 @@ export class GpuRenderer implements Renderer {
         };
 
         this.gl = canvas.getContext("webgl") as WebGLRenderingContext;
-        this.gl.clearColor(0, 0, 0, 1.0);
+
+        this.ext = this.gl.getExtension('ANGLE_instanced_arrays');
+        if (!this.ext) {
+            console.log("Cannot use GPU instancing")
+            alert('need ANGLE_instanced_arrays');
+        }
+
                 
         const vertexShader = createShader(this.gl, this.gl.VERTEX_SHADER, vertexShaderSource) as WebGLShader;
         const fragmentShader = createShader(this.gl, this.gl.FRAGMENT_SHADER, fragmentShaderSource) as WebGLShader;
         const program = createProgram(this.gl, vertexShader, fragmentShader) as WebGLProgram;
         this.gl.useProgram(program);
 
+        this.positionAttributeLocation = this.gl.getAttribLocation(program, 'aVertexPosition');
+        this.colourAttributeLocation = this.gl.getAttribLocation(program, 'aVertexColour');
+        this.worldMatrixAttributeLocation = this.gl.getAttribLocation(program, 'worldMatrix');
+
+        this.viewMatrixUniformLocation = this.gl.getUniformLocation(program, "viewMatrix");
+        this.projectionMatrixUniformLocation = this.gl.getUniformLocation(program, "projectionMatrix");
+
+        this.setUniformMatrix(this.projectionMatrixUniformLocation, Transform.getProjectionMatrix(this.size))
+        
+        // position buffer
         this.positionBuffer = this.gl.createBuffer();
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
+
+        this.gl.enableVertexAttribArray(this.positionAttributeLocation);
+        this.gl.vertexAttribPointer(this.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
+   
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array([
+            0,0,0,
+            0,0,1,
+            1,0,1,
+            0,0,0,
+            1,0,1,
+            1,0,0,
+        ]), this.gl.STATIC_DRAW);
+
+        const numVertices = 6;
+
+        // setup matrices, one per instance
+        const numInstances = 100;
+        // make a typed array with one view per matrix
+        this.matrixData = new Float32Array(numInstances * 16);
+
+        this.matrices = [];
+        for (let i = 0; i < numInstances; ++i) {
+            const byteOffsetToMatrix = i * 16 * 4;
+            const numFloatsForView = 16;
+            this.matrices.push(new Float32Array(
+                this.matrixData.buffer,
+                byteOffsetToMatrix,
+                numFloatsForView));
+        }
+
+        this.worldMatrixBuffer = this.gl.createBuffer();
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.worldMatrixBuffer);
         
-        const positionAttributeLocation = this.gl.getAttribLocation(program, "aVertexPosition");
-        this.gl.enableVertexAttribArray(positionAttributeLocation);
-        this.gl.vertexAttribPointer(positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
+        // set all 4 attributes for matrix
+        const bytesPerMatrix = 4 * 16;
+        for (let i = 0; i < 4; ++i) {
+        const loc = this.worldMatrixAttributeLocation + i;
+        this.gl.enableVertexAttribArray(loc);
+        // note the stride and offset
+        const offset = i * 16;  // 4 floats per row, 4 bytes per float
+        this.gl.vertexAttribPointer(
+            loc,              // location
+            4,                // size (num values to pull from buffer per iteration)
+            this.gl.FLOAT,         // type of data in buffer
+            false,            // normalize
+            bytesPerMatrix,   // stride, num bytes to advance to get to next set of values
+            offset,           // offset in buffer
+        );
+        // this line says this attribute only changes for each 1 instance
+        this.ext.vertexAttribDivisorANGLE(loc, 1);
+        }
 
-        this.worldMatrixLocation = this.gl.getUniformLocation(program, "worldMatrix");
-        this.cameraMatrixLocation = this.gl.getUniformLocation(program, "cameraMatrix");
+        // just allocate the buffer
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.matrixData.byteLength, this.gl.DYNAMIC_DRAW);
 
-        // set uniform matrices
-        this.setUniformMatrix(this.gl.getUniformLocation(program, "projectionMatrix"), Transform.getProjectionMatrix(this.size));
-        this.setUniformMatrix(this.gl.getUniformLocation(program, "viewportMatrix"), Transform.getViewportMatrix(this.size));
+        // setup colors, one per instance
+        this.colourBuffer = this.gl.createBuffer();
 
-        const uniform = this.gl.getUniform(program, this.gl.getUniformLocation(program, "projectionMatrix"))
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colourBuffer);
+        this.gl.enableVertexAttribArray(this.colourAttributeLocation);
+        this.gl.vertexAttribPointer(this.colourAttributeLocation, 4, this.gl.FLOAT, false, 0, 0);
+        this.ext.vertexAttribDivisorANGLE(this.colourAttributeLocation, 1);
 
-        console.log("uniform: " + uniform)
-        console.log(Transform.getProjectionMatrix(this.size))
+       
 
+       
+        // face culling
+        this.gl.enable(this.gl.CULL_FACE);
+        this.gl.cullFace(this.gl.FRONT)
+
+        // depth test
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.depthFunc(this.gl.LESS);
+
+        // viewport
+        this.gl.viewport(0, 0, this.size.width, this.size.height)
+        this.gl.depthRange(nearPlaneZ, farPlaneZ)
         
-        this.colourBuffer = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colourBuffer);
-
-        const colourAttributeLocation = this.gl.getAttribLocation(program, "aVertexColour");
-        this.gl.enableVertexAttribArray(colourAttributeLocation);
-        this.gl.vertexAttribPointer(colourAttributeLocation, 4, this.gl.FLOAT, false, 0, 0);
+        this.gl.clearColor(0, 0, 0, 1.0);
     }
-
-    public render(scene: Scene){
+    
+    public render(scene: Scene) {
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-        
+
+        const gameObjects = scene.gameObjects
+
         const camera = scene.activeCamera;
-        const triangles: [Vec3, Vec3, Vec3][] = []
-        const colours: number[] = []
+        this.setUniformMatrix(this.viewMatrixUniformLocation, Transform.getInverseWorldMatrix(camera.transform));
 
-        const gameObjects = scene.gameObjects;
-        
-        const cameraMatrix = Transform.getInverseWorldMatrix(camera.transform);
+        const worldMatrices: Matrix4[] = [];
+        const colours: number[] = [];
 
-        this.setUniformMatrix(this.cameraMatrixLocation, cameraMatrix);
-        
-        gameObjects.forEach(gameObject => {
-            if (!gameObject.mesh) return;
+        for (let gameObjectIndex = 0; gameObjectIndex < gameObjects.length; gameObjectIndex++){
+            const currentGameObject = gameObjects[gameObjectIndex];
 
-            const worldMatrix: Matrix4 = Transform.getWorldMatrix(gameObject.transform);
-            
-            this.setUniformMatrix(this.worldMatrixLocation, worldMatrix);
+            if (!currentGameObject.mesh) continue;
 
-            triangles.push(...gameObject.mesh.triangles);
-            let colour = gameObject.mesh?.colour.map(c => c / 255);
-            colour = colour ? colour : [0, 0, 0];
-            
-            for (let i = 0; i < 3 * gameObject.mesh.triangles.length; i++) {
-                colours.push(colour[0]);
-                colours.push(colour[1]);
-                colours.push(colour[2]);
-                colours.push(1.0);
+            if (currentGameObject instanceof Panel){
+                const worldMatrix = Transform.getWorldMatrix(currentGameObject.transform);
+                worldMatrices.push(worldMatrix);
+                colours.push(...currentGameObject.mesh.colour, 1);
             }
-        })  
-
-        triangles.push([
-            {x: -1, y: -1, z: 0},
-            {x: 1, y: -1, z: 0},
-            {x: 0, y: 1, z: 0},
-        ])
-
-        for (let i = 0; i < 3; i++) {
-            colours.push(1);
-            colours.push(0);
-            colours.push(0);
-            colours.push(1.0);
         }
 
-        const verticesData = this.trianglesToArray(triangles);
-        const coloursData = new Float32Array(colours);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.worldMatrixBuffer)
 
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, verticesData, this.gl.STATIC_DRAW);
+        const numInstances = worldMatrices.length;
+        this.matrixData = new Float32Array(numInstances * 16);
 
+        // this.matrices = [];
+        // for (let i = 0; i < numInstances; ++i) {
+        //     const byteOffsetToMatrix = i * 16 * 4;
+        //     const numFloatsForView = 16;
+        //     this.matrices.push(new Float32Array(
+        //         this.matrixData.buffer,
+        //         byteOffsetToMatrix,
+        //         numFloatsForView));
+        // }
+        
+        this.matrices.forEach((mat, ndx) => {
+            const glslMatrix = Matrix4.toGlslArray(worldMatrices[ndx]);
+            for (let i = 0; i < 16; i++){
+                mat[i] = glslMatrix[i];
+            }
+        });
+        
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.matrixData.byteLength, this.gl.DYNAMIC_DRAW);
+        this.gl.bufferSubData(this.gl.ARRAY_BUFFER, 0, this.matrixData);
+        
+        // set colours
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colourBuffer);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, coloursData, this.gl.STATIC_DRAW);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colours), this.gl.STATIC_DRAW);
 
-        // this.gl.POINTS
-        this.gl.drawArrays(this.gl.TRIANGLES, 0, verticesData.length / 3);
+        this.ext.drawArraysInstancedANGLE(
+            this.gl.TRIANGLES,
+            0,             // offset
+            6,   // num vertices per instance
+            worldMatrices.length,  // num instances
+        );
     }
 
-    private trianglesToArray(triangles: [Vec3, Vec3, Vec3][]): Float32Array {
-        const vertices = new Float32Array(triangles.length * 3 * 3); 
-        for (let i = 0; i < triangles.length; i++){
-            const currentTriangle = triangles[i];
+    // public render(scene: Scene){
+    //      // webglUtils.resizeCanvasToDisplaySize(gl.canvas);
+    //     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+        
+    //     const camera = scene.activeCamera;
 
-            vertices[i * 9 + 0] = currentTriangle[0].x;
-            vertices[i * 9 + 1] = currentTriangle[0].y;
-            vertices[i * 9 + 2] = currentTriangle[0].z;
+    //     // sort by type for gpu instancing
+    //     const gameObjects = scene.gameObjects.sort((a) => {
+    //         if (a instanceof Panel){
+    //             return 1;
+    //         }
+    //         if (a instanceof Player){
+    //             return 2;
+    //         }
+    //         if (a instanceof Drone){
+    //             return 3;
+    //         }
+    //         if (a instanceof TextObject){
+    //             return 4;
+    //         }
+    //         if (a instanceof Drone){
+    //             return 5;
+    //         }
+            
+    //         return 6;
+    //     });
+        
+        
+    //     // it might be faster to calculate viewProjMatrix and use as a single uniform
+    //     // const viewProjectionMatrix = Matrix4.multiply(this.projectionMatrix, viewMatrix)
+        
+    //     const viewMatrix = Transform.getInverseWorldMatrix(camera.transform);
+    //     this.gl.uniformMatrix4fv(this.viewMatrixLocation, false, Matrix4.toGlslArray(viewMatrix))
 
-            vertices[i * 9 + 3] = currentTriangle[1].x;
-            vertices[i * 9 + 4] = currentTriangle[1].y;
-            vertices[i * 9 + 5] = currentTriangle[1].z;
 
-            vertices[i * 9 + 6] = currentTriangle[2].x;
-            vertices[i * 9 + 7] = currentTriangle[2].y;
-            vertices[i * 9 + 8] = currentTriangle[2].z;
-        }
+    //     // const verticesData: Float32Array = new Float32Array([
+    //     //         0,0,0,
+    //     //         0,0,1,
+    //     //         1,0,1,
+    //     //         0,0,0,
+    //     //         1,0,1,
+    //     //         1,0,0
+    //     //     ])
 
-        return vertices;
-    }
+
+        
+
+    //     ///
+
+    //     let currentVerticesData: Float32Array
+    //     let coloursData: Float32Array
+    //     let worldMatricesData: Float32Array
+
+    //     const colours: number[] = []
+    //     const worldMatrices: number[] = []
+
+    //     let numInstances = 0
+
+    //     gameObjects.forEach((gameObject, gameObjectIndex) => {
+    //         if (!gameObject.mesh) return;
+            
+    //         numInstances++;
+
+    //         let colour = gameObject.mesh?.colour.map(c => c / 255);
+    //         colour = colour ? colour : [0, 0, 0];
+            
+    //         for (let i = 0; i < 3 * gameObject.mesh.triangles.length; i++) {
+    //             colours[4 * i] = colour[0];
+    //             colours[(4 * i) + 1] = colour[1];
+    //             colours[(4 * i) + 2] = colour[2];
+    //             colours[(4 * i) + 3] = 1.0;
+    //         }
+
+    //         const worldMatrix = Transform.getWorldMatrix(gameObject.transform)
+    //         worldMatrices.push(...Matrix4.toGlslArray(worldMatrix));
+
+    //         // draw all of a certain game object
+    //         if (typeof(gameObject) != typeof(gameObjects[gameObjectIndex + 1])){
+    //             // set mesh
+    //             currentVerticesData = this.trianglesToArray(gameObject.mesh.triangles)
+    //             coloursData = new Float32Array(colours);
+    //             worldMatricesData = new Float32Array(worldMatrices);
+
+    //             // set vertices
+    //             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
+    //             this.gl.bufferData(this.gl.ARRAY_BUFFER, currentVerticesData, this.gl.STATIC_DRAW);
+
+    //             // set matrix array
+    //             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.worldMatrixBuffer);
+    //             this.gl.bufferData(this.gl.ARRAY_BUFFER, worldMatricesData, this.gl.DYNAMIC_DRAW);
+
+    //             // set colours
+    //             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colourBuffer);
+    //             this.gl.bufferData(this.gl.ARRAY_BUFFER, coloursData, this.gl.STATIC_DRAW);
+
+    //             // draw
+    //             // this.gl.drawArrays(this.gl.TRIANGLES, 0,  / 3);
+    //             const numVertices = currentVerticesData.length / 3;
+    //             this.ext.drawArraysInstancedANGLE(
+    //                 this.gl.TRIANGLES,
+    //                 0,             // offset
+    //                 numVertices,   // num vertices per instance
+    //                 numInstances,  // num instances
+    //                 );
+                
+    //             // reset
+    //             colours.length = 0;
+    //             worldMatrices.length = 0;
+    //             numInstances = 0;
+    //         }
+    //     })  
+    // }
 
     setUniformMatrix(location: WebGLUniformLocation, matrix: Matrix4){
-        this.gl.uniformMatrix4fv(location, false, [
-            matrix[0][0],matrix[1][0],matrix[2][0],matrix[3][0],
-            matrix[0][1],matrix[1][1],matrix[2][1],matrix[3][1],
-            matrix[0][2],matrix[1][2],matrix[2][2],matrix[3][2],
-            matrix[0][3],matrix[1][3],matrix[2][3],matrix[3][3],
-        ])
+        this.gl.uniformMatrix4fv(location, false, Matrix4.toGlslArray(matrix))
     }
 }
 
 const vertexShaderSource = `
     attribute vec4 aVertexPosition;
     attribute vec4 aVertexColour;
-
-    uniform mat4 worldMatrix;
-    uniform mat4 cameraMatrix;
+    
+    attribute mat4 worldMatrix;
+    uniform mat4 viewMatrix;
     uniform mat4 projectionMatrix;
-    uniform mat4 viewportMatrix;
 
     varying lowp vec4 vColour;
 
-   void main() {
-        mat4 viewMatrix = cameraMatrix * worldMatrix;
-        vec4 viewPoint = viewMatrix * aVertexPosition;
-        vec4 ndcPoint = projectionMatrix * viewPoint;
-        vec4 scaledPoint = ndcPoint * (1.0 / ndcPoint.w);
-
-        gl_Position = vec4(scaledPoint.x, scaledPoint.y, 0.0, 1.0);
+    void main() {
+        gl_Position = projectionMatrix * viewMatrix * worldMatrix * aVertexPosition;
         vColour = aVertexColour;
-   }
+    }
 `;
 
 const fragmentShaderSource = `
@@ -203,87 +372,3 @@ function createProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fra
    }
    return program;
 }
-
-// clipTriangle(triangle: [RasterVertex, RasterVertex, RasterVertex]): [RasterVertex, RasterVertex, RasterVertex][]{
-//         const returnTriangles: [RasterVertex, RasterVertex, RasterVertex][] = []
-
-//         const bufferA : RasterVertex[] = []
-//         const bufferB : RasterVertex[] = [...triangle]
-//         let currentBuffer = 0
-
-//         const planes: Axis[] = ['X', 'Y', 'Z']
-
-        
-//         for (let planeIndex = 0; planeIndex < 3; planeIndex++){
-//             const plane = planes[planeIndex]
-       
-//             const getAxis = plane == 'X'
-//                 ? (rasterVertex: RasterVertex) => rasterVertex.clipPosition.x 
-//                 : plane == 'Y' 
-//                     ? (rasterVertex: RasterVertex) => rasterVertex.clipPosition.y 
-//                     : (rasterVertex: RasterVertex) => rasterVertex.clipPosition.z 
-
-//             for (let wMultiplier = -1; wMultiplier < 2; wMultiplier += 2){
-//                 const currentBufferIsA = currentBuffer % 2 == 0
-//                 const polygonVertices = currentBufferIsA ? bufferA : bufferB
-//                 const lastVertices = currentBufferIsA ? bufferB : bufferA
-
-//                 for (let lastVerticesIndex = 0; lastVerticesIndex < lastVertices.length; lastVerticesIndex++){
-//                     const v1 = lastVertices[lastVerticesIndex]
-//                     const v2 = lastVertices[(lastVerticesIndex + 1) % lastVertices.length]
-
-//                     const v1AxisCoord = getAxis(v1)
-//                     const v2AxisCoord = getAxis(v2)
-            
-//                     const v1Inside = wMultiplier == 1 ? v1AxisCoord < v1.clipPosition.w :  v1AxisCoord > -v1.clipPosition.w
-//                     const v2Inside = wMultiplier == 1 ? v2AxisCoord < v2.clipPosition.w :  v2AxisCoord > -v2.clipPosition.w
-
-//                     // maintain the order
-//                     if (v1Inside && v2Inside){
-//                         polygonVertices.push(v1)
-//                         continue
-//                     }
-//                     else if (!v1Inside && !v2Inside){
-//                         // could loop until find the next vertex inside and start there
-//                         continue
-//                     }
-//                     else {
-//                         let t = ((wMultiplier * v2.clipPosition.w) - v2AxisCoord)/(v1AxisCoord + (wMultiplier * v2.clipPosition.w) - v2AxisCoord - (wMultiplier * v1.clipPosition.w))
-//                         const newPoint = Lerp.lerpRasterVertex(v1, v2, t)
-                        
-//                         if (v1Inside){
-//                             polygonVertices.push(v1)
-//                             polygonVertices.push(newPoint)
-//                             continue
-//                         }
-//                         else {
-//                             polygonVertices.push(newPoint)
-//                             continue
-//                         }
-//                     }
-//                 }
-
-//                 lastVertices.length = 0
-//                 currentBuffer++
-//             }
-//         }
-
-//         const currentBufferIsA = currentBuffer % 2 == 0
-//         const lastVertices = currentBufferIsA ? bufferB : bufferA
-
-//         if (lastVertices.length < 3){
-//             return []
-//         }
-
-//         // triangulate the polygon
-//         for (let i = 0; i < lastVertices.length - 2; i++){
-//             const newTriangle = [
-//                 lastVertices[0],
-//                 lastVertices[(i + 1) % lastVertices.length],
-//                 lastVertices[(i + 2) % lastVertices.length]] as [RasterVertex, RasterVertex, RasterVertex]
-
-//             returnTriangles.push(newTriangle)
-//         }
-
-//         return returnTriangles;
-//     },
