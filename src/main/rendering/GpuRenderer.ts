@@ -53,7 +53,6 @@ export class GpuRenderer implements Renderer {
         this.gl.depthRange(nearPlaneZ, farPlaneZ)
 
         const imageUrl = "./wall.jpg"
-        // const imageUrl = "./Darn.jpg"
         this.loadTexture(imageUrl)
 
         this.gl.clearColor(0, 0, 0, 1.0);
