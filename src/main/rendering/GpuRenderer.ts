@@ -82,7 +82,7 @@ export class GpuRenderer implements Renderer {
                 batches.set(key, batch);
             }
 
-            batch.push(gameObj);
+            batch.push(gameObj); 
         }
 
         for (const batch of batches.values()) {
@@ -101,7 +101,21 @@ export class GpuRenderer implements Renderer {
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.positionBuffer);
         this.gl.vertexAttribPointer(this.gpuInstancingProgram.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
 
+        const meshVertices: number[] = []
+
+        batch[0].mesh.triangles.forEach((triangle) => {
+            triangle.forEach(vertex => {
+                meshVertices.push(vertex.x)
+                meshVertices.push(vertex.y)
+                meshVertices.push(vertex.z)
+            })
+        })
+
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(meshVertices), this.gl.STATIC_DRAW);
+
         this.gpuInstancingProgram.setUniformMatrix(this.gpuInstancingProgram.viewMatrixUniformLocation, viewMatrix);
+
+        
 
         const worldMatrices: Matrix4[] = [];
         const colours: number[] = [];
@@ -109,13 +123,9 @@ export class GpuRenderer implements Renderer {
         for (let batchIndex = 0; batchIndex < batch.length; batchIndex++){
             const currentGameObject = batch[batchIndex];
 
-            if (!currentGameObject.mesh) continue;
-
-            if (currentGameObject instanceof Panel){
-                const worldMatrix = Transform.getWorldMatrix(currentGameObject.transform);
-                worldMatrices.push(worldMatrix);
-                colours.push(...currentGameObject.mesh.colour, 255);
-            }
+            const worldMatrix = Transform.getWorldMatrix(currentGameObject.transform);
+            worldMatrices.push(worldMatrix);
+            colours.push(...currentGameObject.mesh.colour, 255);
         }
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.worldMatrixBuffer)
@@ -144,7 +154,7 @@ export class GpuRenderer implements Renderer {
         this.gpuInstancingProgram.ext.drawArraysInstancedANGLE(
             this.gl.TRIANGLES,
             0,             // offset
-            6,   // num vertices per instance
+            meshVertices.length,   // num vertices per instance
             worldMatrices.length,  // num instances
         );
     }

@@ -57,14 +57,14 @@ class GpuInstancingProgram {
         this.gl.enableVertexAttribArray(this.positionAttributeLocation);
         this.gl.vertexAttribPointer(this.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
     
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array([
-            0,0,0,
-            0,0,1,
-            1,0,1,
-            0,0,0,
-            1,0,1,
-            1,0,0,
-        ]), this.gl.STATIC_DRAW);
+        // this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array([
+        //     0,0,0,
+        //     0,0,1,
+        //     1,0,1,
+        //     0,0,0,
+        //     1,0,1,
+        //     1,0,0,
+        // ]), this.gl.STATIC_DRAW);
 
         const numVertices = 6;
 
