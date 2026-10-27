@@ -16,7 +16,10 @@ export class TextObject extends GameObject {
             const currentTriangles = letter.mesh.triangles;
             const translatedTriangles = currentTriangles.map(triangle => {
                 return triangle.map(vertex => {
-                    const offset = {x: letter.transform.position.x/letter.transform.scale.x, y: letter.transform.position.y/letter.transform.scale.y, z: letter.transform.position.z/letter.transform.scale.z}
+                    const offset = {
+                        x: letter.transform.position.x/letter.transform.scale.x, 
+                        y: letter.transform.position.y/letter.transform.scale.y, 
+                        z: letter.transform.position.z/letter.transform.scale.z}
                     return Vec3.add(vertex, offset)
                 })
             })

@@ -1,34 +1,23 @@
 import { Matrix4, Transform, Vec2, Vec3, Vec4 } from "../maths/index";
-import Drone from "../scene/game-objects/Drone";
+import { GameObject } from "../scene/game-objects";
 import { Panel } from "../scene/game-objects/Panel";
-import Player from "../scene/game-objects/Player";
+import Rabbit from "../scene/game-objects/Rabbit";
 import { Scene } from "../scene/Scene";
+import { Letter } from "../scene/scenes/CvScene/game-objects/Letter";
 import { TextObject } from "../scene/scenes/CvScene/game-objects/TextObject";
 import { farPlaneZ, nearPlaneZ } from "../utils/constants";
 import { CanvasSize } from "../utils/types";
-import { Projection } from "./Projection";
+import GpuInstancingProgram from "./programs/GpuInstancingProgram";
+import RegularProgram from "./programs/RegularProgram";
 import { Renderer } from "./Renderer";
 
+const gpuInstancingBoundary = 5;
+
 export class GpuRenderer implements Renderer {
-    positionBuffer: WebGLBuffer
-    colourBuffer: WebGLBuffer
-    worldMatrixBuffer: WebGLBuffer
-
-
-    projectionMatrix: Matrix4
-
-    positionAttributeLocation: number;
-    colourAttributeLocation: number;
-    worldMatrixAttributeLocation: number;
-
-    viewMatrixUniformLocation: WebGLUniformLocation;
-    projectionMatrixUniformLocation: WebGLUniformLocation;
-
-    matrixData: Float32Array
-    matrices: Float32Array[]
+    gpuInstancingProgram: GpuInstancingProgram;
+    regularProgram: RegularProgram;
 
     gl: WebGLRenderingContext;
-    ext: ANGLE_instanced_arrays;
     size: CanvasSize;
 
     constructor(){
@@ -43,86 +32,14 @@ export class GpuRenderer implements Renderer {
 
         this.gl = canvas.getContext("webgl") as WebGLRenderingContext;
 
-        this.ext = this.gl.getExtension('ANGLE_instanced_arrays');
-        if (!this.ext) {
-            console.log("Cannot use GPU instancing")
-            alert('need ANGLE_instanced_arrays');
-        }
-
-                
-        const vertexShader = createShader(this.gl, this.gl.VERTEX_SHADER, vertexShaderSource) as WebGLShader;
-        const fragmentShader = createShader(this.gl, this.gl.FRAGMENT_SHADER, fragmentShaderSource) as WebGLShader;
-        const program = createProgram(this.gl, vertexShader, fragmentShader) as WebGLProgram;
-        this.gl.useProgram(program);
-
-        this.positionAttributeLocation = this.gl.getAttribLocation(program, 'aVertexPosition');
-        this.colourAttributeLocation = this.gl.getAttribLocation(program, 'aVertexColour');
-        this.worldMatrixAttributeLocation = this.gl.getAttribLocation(program, 'worldMatrix');
-
-        this.viewMatrixUniformLocation = this.gl.getUniformLocation(program, "viewMatrix");
-        this.projectionMatrixUniformLocation = this.gl.getUniformLocation(program, "projectionMatrix");
-
-        this.setUniformMatrix(this.projectionMatrixUniformLocation, Transform.getProjectionMatrix(this.size))
+        this.gpuInstancingProgram = new GpuInstancingProgram(this.gl, this.size);
+        this.regularProgram = new RegularProgram(this.gl, this.size);
         
-        // position buffer
-        this.positionBuffer = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.positionBuffer);
-
-        this.gl.enableVertexAttribArray(this.positionAttributeLocation);
-        this.gl.vertexAttribPointer(this.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
-   
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array([
-            0,0,0,
-            0,0,1,
-            1,0,1,
-            0,0,0,
-            1,0,1,
-            1,0,0,
-        ]), this.gl.STATIC_DRAW);
-
-        const numVertices = 6;
-
-        // setup matrices, one per instance
-
-        this.createMatrixArray(100);
+        this.gl.useProgram(this.gpuInstancingProgram.program)
         
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.positionBuffer);
+        this.gl.vertexAttribPointer(this.gpuInstancingProgram.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
 
-        this.worldMatrixBuffer = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.worldMatrixBuffer);
-        
-        // set all 4 attributes for matrix
-        const bytesPerMatrix = 4 * 16;
-        for (let i = 0; i < 4; ++i) {
-        const loc = this.worldMatrixAttributeLocation + i;
-        this.gl.enableVertexAttribArray(loc);
-        // note the stride and offset
-        const offset = i * 16;  // 4 floats per row, 4 bytes per float
-        this.gl.vertexAttribPointer(
-            loc,              // location
-            4,                // size (num values to pull from buffer per iteration)
-            this.gl.FLOAT,         // type of data in buffer
-            false,            // normalize
-            bytesPerMatrix,   // stride, num bytes to advance to get to next set of values
-            offset,           // offset in buffer
-        );
-        // this line says this attribute only changes for each 1 instance
-        this.ext.vertexAttribDivisorANGLE(loc, 1);
-        }
-
-        // just allocate the buffer
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.matrixData.byteLength, this.gl.DYNAMIC_DRAW);
-
-        // setup colors, one per instance
-        this.colourBuffer = this.gl.createBuffer();
-
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colourBuffer);
-        this.gl.enableVertexAttribArray(this.colourAttributeLocation);
-        this.gl.vertexAttribPointer(this.colourAttributeLocation, 4, this.gl.FLOAT, false, 0, 0);
-        this.ext.vertexAttribDivisorANGLE(this.colourAttributeLocation, 1);
-
-       
-
-       
         // face culling
         this.gl.enable(this.gl.CULL_FACE);
         this.gl.cullFace(this.gl.FRONT)
@@ -144,47 +61,87 @@ export class GpuRenderer implements Renderer {
         const gameObjects = scene.gameObjects
 
         const camera = scene.activeCamera;
-        this.setUniformMatrix(this.viewMatrixUniformLocation, Transform.getInverseWorldMatrix(camera.transform));
+        const viewMatrix = Transform.getInverseWorldMatrix(camera.transform)
+
+        const batches = new Map<string, GameObject[]>()
+
+        for (const gameObj of gameObjects){
+            if (!gameObj.mesh) continue;
+
+            let key: string = "";
+
+            if (gameObj instanceof Panel) key = "panel"
+            if (gameObj instanceof Rabbit) key = "rabbit"
+            if (gameObj instanceof Letter) key = "letter"
+            if (gameObj instanceof TextObject) key = "text"
+
+            let batch = batches.get(key);
+
+            if (!batch) {
+                batch = [];
+                batches.set(key, batch);
+            }
+
+            batch.push(gameObj);
+        }
+
+        for (const batch of batches.values()) {
+            if (batch.length > gpuInstancingBoundary){
+                this.instanceBatch(batch, viewMatrix);
+            }
+            else {
+                this.renderBatch(batch, viewMatrix);
+            }
+        }
+    }
+
+    instanceBatch(batch: GameObject[], viewMatrix: Matrix4){
+        this.gl.useProgram(this.gpuInstancingProgram.program);
+        
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.positionBuffer);
+        this.gl.vertexAttribPointer(this.gpuInstancingProgram.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
+
+        this.gpuInstancingProgram.setUniformMatrix(this.gpuInstancingProgram.viewMatrixUniformLocation, viewMatrix);
 
         const worldMatrices: Matrix4[] = [];
         const colours: number[] = [];
 
-        for (let gameObjectIndex = 0; gameObjectIndex < gameObjects.length; gameObjectIndex++){
-            const currentGameObject = gameObjects[gameObjectIndex];
+        for (let batchIndex = 0; batchIndex < batch.length; batchIndex++){
+            const currentGameObject = batch[batchIndex];
 
             if (!currentGameObject.mesh) continue;
 
             if (currentGameObject instanceof Panel){
                 const worldMatrix = Transform.getWorldMatrix(currentGameObject.transform);
                 worldMatrices.push(worldMatrix);
-                colours.push(...currentGameObject.mesh.colour, 1);
+                colours.push(...currentGameObject.mesh.colour, 255);
             }
         }
 
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.worldMatrixBuffer)
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.worldMatrixBuffer)
 
         const numInstances = worldMatrices.length;
         
-        if (this.matrices.length < numInstances){
-            this.createMatrixArray(numInstances)
+        if (this.gpuInstancingProgram.matrices.length < numInstances){
+            this.gpuInstancingProgram.createMatrixArray(numInstances)
         }
 
         for (let i = 0; i < numInstances; i++){
             const glslMatrix = Matrix4.toGlslArray(worldMatrices[i]);
             for (let j = 0; j < 16; j++){
-                this.matrices[i][j] = glslMatrix[j];
+                this.gpuInstancingProgram.matrices[i][j] = glslMatrix[j];
             }
         };
 
 
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.matrixData.byteLength, this.gl.DYNAMIC_DRAW);
-        this.gl.bufferSubData(this.gl.ARRAY_BUFFER, 0, this.matrixData);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.matrixData.byteLength, this.gl.DYNAMIC_DRAW);
+        this.gl.bufferSubData(this.gl.ARRAY_BUFFER, 0, this.gpuInstancingProgram.matrixData);
         
         // set colours
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colourBuffer);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colours), this.gl.STATIC_DRAW);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.colourBuffer);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colours.map(v => v/255)), this.gl.STATIC_DRAW);
 
-        this.ext.drawArraysInstancedANGLE(
+        this.gpuInstancingProgram.ext.drawArraysInstancedANGLE(
             this.gl.TRIANGLES,
             0,             // offset
             6,   // num vertices per instance
@@ -192,69 +149,30 @@ export class GpuRenderer implements Renderer {
         );
     }
 
-    setUniformMatrix(location: WebGLUniformLocation, matrix: Matrix4){
-        this.gl.uniformMatrix4fv(location, false, Matrix4.toGlslArray(matrix))
-    }
+    renderBatch(batch: GameObject[], viewMatrix: Matrix4){
+        this.gl.useProgram(this.regularProgram.program);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.regularProgram.positionBuffer);
+        this.gl.vertexAttribPointer(this.regularProgram.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
 
-    createMatrixArray(numInstances: number){
-        // make a typed array with one view per matrix
-        this.matrixData = new Float32Array(numInstances * 16);
-
-        this.matrices = [];
-        for (let i = 0; i < numInstances; ++i) {
-            const byteOffsetToMatrix = i * 16 * 4;
-            const numFloatsForView = 16;
-            this.matrices.push(new Float32Array(
-                this.matrixData.buffer,
-                byteOffsetToMatrix,
-                numFloatsForView));
+        this.gl.uniformMatrix4fv(this.regularProgram.viewMatrixUniformLocation, false, Matrix4.toGlslArray(viewMatrix))
+                
+        const vertices: number[] = []
+        
+        for (const gameObj of batch){
+            const worldMatrix = Transform.getWorldMatrix(gameObj.transform)
+            this.gl.uniform3fv(this.regularProgram.colourUniformLocation, gameObj.mesh.colour.map(v => v/255));
+            this.gl.uniformMatrix4fv(this.regularProgram.worldMatrixUniformLocation, false, Matrix4.toGlslArray(worldMatrix))
+            
+            for (const triangle of gameObj.mesh.triangles){
+                for (const vertex of triangle){
+                    vertices.push(vertex.x, vertex.y, vertex.z)
+                }
+            }
         }
+
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW)
+
+        this.gl.drawArrays(this.gl.TRIANGLES, 0, vertices.length)
     }
 }
 
-const vertexShaderSource = `
-    attribute vec4 aVertexPosition;
-    attribute vec4 aVertexColour;
-    
-    attribute mat4 worldMatrix;
-    uniform mat4 viewMatrix;
-    uniform mat4 projectionMatrix;
-
-    varying lowp vec4 vColour;
-
-    void main() {
-        gl_Position = projectionMatrix * viewMatrix * worldMatrix * aVertexPosition;
-        vColour = aVertexColour;
-    }
-`;
-
-const fragmentShaderSource = `
-    varying lowp vec4 vColour;
-    void main() {
-        gl_FragColor = vColour;
-    }
-`;
-
-function createShader(gl: WebGLRenderingContext, type: number, source: string) {
-   const shader: WebGLShader = gl.createShader(type) as WebGLShader;
-   gl.shaderSource(shader, source);
-   gl.compileShader(shader);
-   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-       console.error("Error compiling shader:", gl.getShaderInfoLog(shader));
-       gl.deleteShader(shader);
-       return null;
-   }
-   return shader;
-}
-
-function createProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader) {
-   const program = gl.createProgram();
-   gl.attachShader(program, vertexShader);
-   gl.attachShader(program, fragmentShader);
-   gl.linkProgram(program);
-   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-       console.error("Error linking program:", gl.getProgramInfoLog(program));
-       return null;
-   }
-   return program;
-}
