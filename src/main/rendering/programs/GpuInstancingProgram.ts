@@ -5,12 +5,14 @@ class GpuInstancingProgram {
     positionBuffer: WebGLBuffer
     colourBuffer: WebGLBuffer
     worldMatrixBuffer: WebGLBuffer
+    textureCoordBuffer: WebGLBuffer
 
     projectionMatrix: Matrix4
 
     positionAttributeLocation: number;
     colourAttributeLocation: number;
     worldMatrixAttributeLocation: number;
+    textureCoordAttributeLocation: number;
 
     viewMatrixUniformLocation: WebGLUniformLocation;
     projectionMatrixUniformLocation: WebGLUniformLocation;
@@ -44,6 +46,7 @@ class GpuInstancingProgram {
         this.positionAttributeLocation = this.gl.getAttribLocation(this.program, 'aVertexPosition');
         this.colourAttributeLocation = this.gl.getAttribLocation(this.program, 'aVertexColour');
         this.worldMatrixAttributeLocation = this.gl.getAttribLocation(this.program, 'worldMatrix');
+        this.textureCoordAttributeLocation = this.gl.getAttribLocation(this.program, 'aTextureCoord');
 
         this.viewMatrixUniformLocation = this.gl.getUniformLocation(this.program, "viewMatrix");
         this.projectionMatrixUniformLocation = this.gl.getUniformLocation(this.program, "projectionMatrix");
@@ -56,20 +59,8 @@ class GpuInstancingProgram {
 
         this.gl.enableVertexAttribArray(this.positionAttributeLocation);
         this.gl.vertexAttribPointer(this.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
-    
-        // this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array([
-        //     0,0,0,
-        //     0,0,1,
-        //     1,0,1,
-        //     0,0,0,
-        //     1,0,1,
-        //     1,0,0,
-        // ]), this.gl.STATIC_DRAW);
-
-        const numVertices = 6;
 
         // setup matrices, one per instance
-
         this.createMatrixArray(100);
         
         this.worldMatrixBuffer = this.gl.createBuffer();
@@ -104,6 +95,25 @@ class GpuInstancingProgram {
         this.gl.enableVertexAttribArray(this.colourAttributeLocation);
         this.gl.vertexAttribPointer(this.colourAttributeLocation, 4, this.gl.FLOAT, false, 0, 0);
         this.ext.vertexAttribDivisorANGLE(this.colourAttributeLocation, 1);
+
+
+         const textureCoordinates = [
+            0.0, 0.0,
+            0.0, 1.0,
+            1.0, 1.0,
+            0.0, 0.0,
+            1.0, 1.0,
+            1.0, 0.0,
+         ]
+
+        this.textureCoordBuffer = this.gl.createBuffer();
+        
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.textureCoordBuffer);
+        this.gl.enableVertexAttribArray(this.textureCoordAttributeLocation);
+        this.gl.vertexAttribPointer(this.textureCoordAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
+        // this.ext.vertexAttribDivisorANGLE(this.textureCoordAttributeLocation, 1);
+
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), this.gl.STATIC_DRAW);
     }
 
     setUniformMatrix(location: WebGLUniformLocation, matrix: Matrix4){
@@ -131,23 +141,33 @@ export default GpuInstancingProgram;
 const gpuInstancingVertexShaderSource = `
     attribute vec4 aVertexPosition;
     attribute vec4 aVertexColour;
-    
+    attribute vec2 aTextureCoord;
+
     attribute mat4 worldMatrix;
     uniform mat4 viewMatrix;
     uniform mat4 projectionMatrix;
 
     varying lowp vec4 vColour;
+    varying highp vec2 vTextureCoord;
 
     void main() {
         gl_Position = projectionMatrix * viewMatrix * worldMatrix * aVertexPosition;
         vColour = aVertexColour;
+        vTextureCoord = aTextureCoord;
     }
 `;
 
 const fragmentShaderSource = `
+    precision highp float;
+
     varying lowp vec4 vColour;
+    varying highp vec2 vTextureCoord;
+
+    uniform sampler2D uSampler;
+
     void main() {
-        gl_FragColor = vColour;
+        vec4 texColour = texture2D(uSampler, vTextureCoord);
+        gl_FragColor = mix(vColour, texColour, 0.9);
     }
 `;
 
