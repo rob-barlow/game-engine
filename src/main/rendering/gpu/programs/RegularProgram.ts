@@ -1,5 +1,5 @@
-import { Matrix4, Transform } from "../../maths";
-import { CanvasSize } from "../../utils/types";
+import { Matrix4, Transform } from "../../../maths";
+import { CanvasSize } from "../../../utils/types";
 
 class RegularProgram {
     positionBuffer: WebGLBuffer

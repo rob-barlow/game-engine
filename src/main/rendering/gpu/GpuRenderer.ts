@@ -1,15 +1,16 @@
-import { Matrix4, Transform, Vec2, Vec3, Vec4 } from "../maths/index";
-import { GameObject } from "../scene/game-objects";
-import { Panel } from "../scene/game-objects/Panel";
-import Rabbit from "../scene/game-objects/Rabbit";
-import { Scene } from "../scene/Scene";
-import { Letter } from "../scene/scenes/CvScene/game-objects/Letter";
-import { TextObject } from "../scene/scenes/CvScene/game-objects/TextObject";
-import { farPlaneZ, nearPlaneZ } from "../utils/constants";
-import { CanvasSize } from "../utils/types";
+import { Matrix4, Transform, Vec2, Vec3, Vec4 } from "../../maths/index";
+import { GameObject } from "../../scene/game-objects";
+import { Panel } from "../../scene/game-objects/Panel";
+import Rabbit from "../../scene/game-objects/Rabbit";
+import { Scene } from "../../scene/Scene";
+import { Letter } from "../../scene/scenes/CvScene/game-objects/Letter";
+import { TextObject } from "../../scene/scenes/CvScene/game-objects/TextObject";
+import { farPlaneZ, nearPlaneZ } from "../../utils/constants";
+import { CanvasSize } from "../../utils/types";
 import GpuInstancingProgram from "./programs/GpuInstancingProgram";
 import RegularProgram from "./programs/RegularProgram";
-import { Renderer } from "./Renderer";
+import { Renderer } from "../Renderer";
+import GeometryPass from "./passes/GeometryPass";
 
 const gpuInstancingBoundary = 5;
 
@@ -19,6 +20,10 @@ export class GpuRenderer implements Renderer {
 
     gl: WebGLRenderingContext;
     size: CanvasSize;
+
+    wallTexture: WebGLTexture;
+
+    geometryPass: GeometryPass;
 
     constructor(){
         const canvas = document.getElementById("gpu-canvas") as HTMLCanvasElement;
@@ -49,14 +54,35 @@ export class GpuRenderer implements Renderer {
         this.gl.depthFunc(this.gl.LESS);
 
         // viewport
-        this.gl.viewport(0, 0, this.size.width, this.size.height)
-        this.gl.depthRange(nearPlaneZ, farPlaneZ)
+        this.gl.viewport(0, 0, this.size.width, this.size.height);
+        this.gl.depthRange(nearPlaneZ, farPlaneZ);
 
-        const imageUrl = "./wall.jpg"
-        this.loadTexture(imageUrl)
+        const imageUrl = "./wall.jpg";
+        this.wallTexture = this.loadTexture(imageUrl);
 
         this.gl.clearColor(0, 0, 0, 1.0);
     }
+
+//     render(scene: Scene) {
+//     // 1. Build draw list / culling
+//     const visibleObjects = scene.getVisibleObjects();
+
+//     // 2. Geometry pass
+//     geometryPass.render(visibleObjects);
+
+//     // 3. Lighting pass (optional)
+//     lightingPass.render();
+
+//     // 4. Post-processing passes (optional)
+//     bloomPass.render();
+//     fogPass.render();
+
+//     // 5. UI pass
+//     uiPass.render(scene.ui);
+
+//     // 6. Present to screen
+//     this.present();
+// }
     
     public render(scene: Scene) {
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
@@ -221,12 +247,12 @@ export class GpuRenderer implements Renderer {
         image.onload = () => {
             this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
             this.gl.texImage2D(
-            this.gl.TEXTURE_2D,
-            level,
-            internalFormat,
-            srcFormat,
-            srcType,
-            image,
+                this.gl.TEXTURE_2D,
+                level,
+                internalFormat,
+                srcFormat,
+                srcType,
+                image,
             );
 
             // WebGL1 has different requirements for power of 2 images

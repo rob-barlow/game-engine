@@ -1,9 +1,9 @@
-import { Matrix4, Transform, Vec2, Vec3, Vec4 } from "../maths/index";
-import { RasterVertex } from "../maths/RasterVertex";
-import { Scene } from "../scene/Scene";
-import { CanvasSize } from "../utils/types";
+import { Matrix4, Transform, Vec2, Vec3, Vec4 } from "../../maths/index";
+import { RasterVertex } from "../../maths/RasterVertex";
+import { Scene } from "../../scene/Scene";
+import { CanvasSize } from "../../utils/types";
 import { Projection } from "./Projection";
-import { Renderer } from "./Renderer";
+import { Renderer } from "../Renderer";
 import { ScreenBuffer } from "./ScreenBuffer";
 
 export class CpuRenderer implements Renderer {

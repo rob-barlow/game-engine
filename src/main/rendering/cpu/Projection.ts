@@ -1,7 +1,7 @@
-import { Matrix4, Transform, Vec3, Vec4 } from "../maths/index";
-import { Lerp } from "../maths/Lerp";
-import { RasterVertex } from "../maths/RasterVertex";
-import { Axis } from "../utils/types";
+import { Matrix4, Transform, Vec3, Vec4 } from "../../maths/index";
+import { Lerp } from "../../maths/Lerp";
+import { RasterVertex } from "../../maths/RasterVertex";
+import { Axis } from "../../utils/types";
 
 export const Projection = {
     projectTriangles(triangles: [Vec3, Vec3, Vec3][], transform: Transform, cameraMatrix: Matrix4, projectionMatrix: Matrix4, viewportMatrix: Matrix4): 
