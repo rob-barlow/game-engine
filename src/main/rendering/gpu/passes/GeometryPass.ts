@@ -10,20 +10,25 @@ import { Matrix4 } from "../../../maths";
 import GpuInstancingProgram from "../programs/GpuInstancingProgram";
 import RegularProgram from "../programs/RegularProgram";
 import { CanvasSize } from "../../../utils/types";
+import AssetManager from "../../../app/AssetManager";
 
 const gpuInstancingBoundary = 5;
 
 export default class GeometryPass implements Pass {
     size: CanvasSize;
     gl: WebGLRenderingContext;
+    assetManager: AssetManager;
     
     gpuInstancingProgram: GpuInstancingProgram;
     regularProgram: RegularProgram;
 
+    wallTexture: WebGLTexture;
+    waterTexture: WebGLTexture;
 
-    constructor(gl: WebGLRenderingContext, size: CanvasSize){
+    constructor(gl: WebGLRenderingContext, size: CanvasSize, assetManager: AssetManager){
         this.gl = gl;
         this.size = size;
+        this.assetManager = assetManager;
 
         this.gpuInstancingProgram = new GpuInstancingProgram(this.gl, this.size);
         this.regularProgram = new RegularProgram(this.gl, this.size);
@@ -33,6 +38,16 @@ export default class GeometryPass implements Pass {
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.positionBuffer);
         this.gl.vertexAttribPointer(this.gpuInstancingProgram.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
 
+        this.gl.activeTexture(this.gl.TEXTURE0);
+        const waterImageUrl = "./water.jpg";
+        this.waterTexture = this.loadTexture(waterImageUrl);
+
+        this.gl.activeTexture(this.gl.TEXTURE1);
+        const wallImageUrl = "./wall.jpg";
+        this.wallTexture = this.loadTexture(wallImageUrl);
+
+        this.gl.uniform1i(this.gl.getUniformLocation(this.gpuInstancingProgram.program, "uWaterTexture"), 0)
+        this.gl.uniform1i(this.gl.getUniformLocation(this.gpuInstancingProgram.program, "uBrickTexture"), 1)
     }
 
     public render(scene: Scene) {
@@ -165,4 +180,68 @@ export default class GeometryPass implements Pass {
         this.gl.drawArrays(this.gl.TRIANGLES, 0, vertices.length)
     }
     
+    loadTexture(url: string) {
+        const texture = this.gl.createTexture();
+        this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+
+        // Because images have to be downloaded over the internet
+        // they might take a moment until they are ready.
+        // Until then put a single pixel in the texture so we can
+        // use it immediately. When the image has finished downloading
+        // we'll update the texture with the contents of the image.
+        const level = 0;
+        const internalFormat = this.gl.RGBA;
+        const width = 1;
+        const height = 1;
+        const border = 0;
+        const srcFormat = this.gl.RGBA;
+        const srcType = this.gl.UNSIGNED_BYTE;
+        const pixel = new Uint8Array([0, 0, 255, 255]); // opaque blue
+        this.gl.texImage2D(
+            this.gl.TEXTURE_2D,
+            level,
+            internalFormat,
+            width,
+            height,
+            border,
+            srcFormat,
+            srcType,
+            pixel,
+        );
+
+        const image =  this.assetManager.getImage(url);
+
+        this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+        this.gl.texImage2D(
+            this.gl.TEXTURE_2D,
+            level,
+            internalFormat,
+            srcFormat,
+            srcType,
+            image,
+        );
+
+        // WebGL1 has different requirements for power of 2 images
+        // vs. non power of 2 images so check if the image is a
+        // power of 2 in both dimensions.
+        if (this.isPowerOf2(image.width) && this.isPowerOf2(image.height)) {
+            // Yes, it's a power of 2. Generate mips.
+            this.gl.generateMipmap(this.gl.TEXTURE_2D);
+        } 
+        else {
+            // No, it's not a power of 2. Turn off mips and set
+            // wrapping to clamp to edge
+            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+        }
+
+        this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
+
+        return texture;
+    }
+
+    isPowerOf2(value: number) {
+        return (value & (value - 1)) === 0;
+    }
 }

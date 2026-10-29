@@ -15,6 +15,7 @@ import { createMazeScene } from "../scene/scenes/MazeScene/MazeScene";
 import { createRabbitScene } from "../scene/scenes/RabbitScene/RabbitScene";
 import { createTestScene } from "../scene/scenes/TestScene/TestScene";
 import { createCvScene } from "../scene/scenes/CvScene/CvScene";
+import AssetManager from "./AssetManager";
 
 export class Engine{
     renderer: Renderer = new CpuRenderer();
@@ -32,6 +33,8 @@ export class Engine{
     gameSettings: GameSettings = new GameSettings()
     uiController: UiController = new UiController()
 
+    assetManager: AssetManager;
+
     constructor(initialScene: Scene, controllers: Controller[]){
         this.scene = initialScene;
         this.controllers = controllers
@@ -42,9 +45,12 @@ export class Engine{
             controller.setInputReader(this.inputReader)
             controller.useSettings(this.gameSettings)
         })
+
+        this.assetManager = new AssetManager();
     }
     
-    start(){
+    async start(){
+        await this.assetManager.load();
         this.lastFrameTimestamp = performance.now();
         requestAnimationFrame(this.frame);
     }
@@ -139,8 +145,6 @@ export class Engine{
                 numOfTriangles+= currentMesh.triangles.length
             }
         })
-
-        console.log("triangles in the scene: " + numOfTriangles);
         
         this.controllers.forEach(controller => {
             controller.setInputReader(this.inputReader)
@@ -154,7 +158,7 @@ export class Engine{
                 this.renderer = new CpuRenderer();
                 break;
             case RendererType.GPU:
-                this.renderer = new GpuRenderer();
+                this.renderer = new GpuRenderer(this.assetManager);
                 break;
         }
     }

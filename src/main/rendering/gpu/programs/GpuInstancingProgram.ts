@@ -163,11 +163,15 @@ const fragmentShaderSource = `
     varying lowp vec4 vColour;
     varying highp vec2 vTextureCoord;
 
-    uniform sampler2D uSampler;
+    uniform sampler2D uBrickTexture;
+    uniform sampler2D uWaterTexture;
 
     void main() {
-        vec4 texColour = texture2D(uSampler, vTextureCoord);
-        gl_FragColor = mix(vColour, texColour, 0.9);
+        vec4 brickTextureColour = texture2D(uBrickTexture, vTextureCoord);
+        vec4 waterTextureColour = texture2D(uWaterTexture, vTextureCoord);
+        vec4 mixTextureColour = mix(brickTextureColour, waterTextureColour, 0.5);
+
+        gl_FragColor = mix(vColour, mixTextureColour, 0.9);
     }
 `;
 
