@@ -49,8 +49,7 @@ export class Engine{
         this.assetManager = new AssetManager();
     }
     
-    async start(){
-        await this.assetManager.load();
+    start(){
         this.lastFrameTimestamp = performance.now();
         requestAnimationFrame(this.frame);
     }
@@ -152,7 +151,7 @@ export class Engine{
         })
     }
 
-    changeRenderer = (rendererType: RendererType) => {
+    changeRenderer = async (rendererType: RendererType) => {
         switch (rendererType) {
             case RendererType.CPU:
                 this.renderer = new CpuRenderer();

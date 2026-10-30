@@ -37,6 +37,8 @@ export default class GeometryPass implements Pass {
         
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.positionBuffer);
         this.gl.vertexAttribPointer(this.gpuInstancingProgram.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
+        
+        this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
 
         this.gl.activeTexture(this.gl.TEXTURE0);
         const waterImageUrl = "./water.jpg";
@@ -191,27 +193,11 @@ export default class GeometryPass implements Pass {
         // we'll update the texture with the contents of the image.
         const level = 0;
         const internalFormat = this.gl.RGBA;
-        const width = 1;
-        const height = 1;
-        const border = 0;
         const srcFormat = this.gl.RGBA;
         const srcType = this.gl.UNSIGNED_BYTE;
-        const pixel = new Uint8Array([0, 0, 255, 255]); // opaque blue
-        this.gl.texImage2D(
-            this.gl.TEXTURE_2D,
-            level,
-            internalFormat,
-            width,
-            height,
-            border,
-            srcFormat,
-            srcType,
-            pixel,
-        );
-
+      
         const image =  this.assetManager.getImage(url);
 
-        this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
         this.gl.texImage2D(
             this.gl.TEXTURE_2D,
             level,
@@ -235,8 +221,6 @@ export default class GeometryPass implements Pass {
             this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
             this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
         }
-
-        this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
 
         return texture;
     }

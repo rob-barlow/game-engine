@@ -28,6 +28,74 @@ const rightWallColour: [number, number, number] = [0,255, 0]
 const frontWallColour: [number, number, number] = [255,0,0]
 const backWallColour: [number, number, number] = [255,255,0]
 
+
+const minusZOrientation: Matrix3 = Matrix3.getRotationMatrix('x', -Math.PI/2)
+
+const leftWallOrientation: Matrix3 = Matrix3.multiply(Matrix3.getRotationMatrix('y', -Math.PI/2), minusZOrientation)
+const leftWallScale: Vec3 = {x: 1, y: 4, z: 2}
+
+const rightWallOrientation: Matrix3 = Matrix3.multiply(Matrix3.getRotationMatrix('y', Math.PI/2), minusZOrientation)
+const rightWallScale: Vec3 = {x: 1, y: 4, z: 2}
+
+const frontWallOrientation: Matrix3 = Matrix3.multiply(Matrix3.getRotationMatrix('y', Math.PI), minusZOrientation)
+const frontWallScale: Vec3 = {x: 2, y: 4, z: 1}
+
+const backWallOrientation: Matrix3 = minusZOrientation
+const backWallScale: Vec3 = {x: 2, y: 4, z: 1}
+
+
+// switch (direction) {
+//         case 'X':
+//             normal.x = 1
+//             break;
+//         case '-X':
+//             normal.x = -1
+//             break;
+//         case 'Y':
+//             normal.y = 1
+//             break;
+//         case '-Y':
+//             normal.y = -1
+//             break;
+//         case 'Z':
+//             normal.z = 1
+//             break;
+//         case '-Z':
+//             normal.z = -1
+//             break;
+//     }
+
+//  const xNormal = {x: 1, y: 0, z: 0}
+//         const xNegNormal = {x: -1, y: 0, z: 0}
+//         const yNegNormal = {x: 0, y: -1, z: 0}
+//         const zNormal = {x: 0, y: 0, z: 1}
+//         const zNegNormal = {x: 0, y: 0, z: -1}
+
+//         let orientation: Matrix3 = Matrix3.identity()
+//         let positionOffset: Vec3 = {x: 0, y: 0, z: 0}
+
+//         if (Vec3.equals(normal, xNormal)){
+//         }
+//         else if (Vec3.equals(normal, xNegNormal)){
+//             positionOffset.z = 1
+//         }
+//         else if (Vec3.equals(normal, yNegNormal)){
+//             orientation = Matrix3.multiply(Matrix3.getRotationMatrix('z', Math.PI), Matrix3.identity())
+//             positionOffset.x = 1
+//         }
+//         else if (Vec3.equals(normal, zNormal)){
+//             orientation = Matrix3.multiply(Matrix3.getRotationMatrix('y', Math.PI), minusZOrientation)
+//             positionOffset.x = 1
+//         }
+//         else if (Vec3.equals(normal, zNegNormal)){
+//             orientation = minusZOrientation
+//         }
+
+
+
+
+
+
 function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
     const {seed, maze} = generateMaze(mazeWidth, mazeHeight);
 
@@ -55,25 +123,57 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
 
     // flatPanels.push(new Panel(ceilingPanelTransform, ceilingColour))
 
+    // add walls
     for (let rowIndex = 0; rowIndex < maze.length; rowIndex++){
         for (let columnIndex = 0; columnIndex < maze[rowIndex].length; columnIndex++){
             // x = row, z = column
             if (maze[rowIndex][columnIndex] == 0 || maze[rowIndex][columnIndex] == 2 || maze[rowIndex][columnIndex] == 3){
                 // add wall between this and all 1s
+
+                // left wall
                 if (maze[rowIndex - 1][columnIndex] == 1){
-                    panels.push(...getPanelsWrapper(2 * rowIndex, 0, [2 * columnIndex, 2 * columnIndex + 1], 'X', leftWallColour))
+                    const transform: Transform = {
+                        position: {x: 2 * rowIndex, y: 0, z: 2 * columnIndex},
+                        orientation: leftWallOrientation,
+                        scale: leftWallScale
+                    }
+                    const panel = new Panel(transform, leftWallColour);
+                    panels.push(panel)
                 }
+                // right wall
                 if (maze[rowIndex + 1][columnIndex] == 1){
-                    panels.push(...getPanelsWrapper(2 * rowIndex + 2, 0, [2 * columnIndex, 2 * columnIndex + 1], '-X', rightWallColour))
+                    const transform: Transform = {
+                        position: {x: 2 * rowIndex + 2, y: 0, z: 2 * columnIndex + 2},
+                        orientation: rightWallOrientation,
+                        scale: rightWallScale
+                    }
+                    const panel = new Panel(transform, rightWallColour);
+                    panels.push(panel)
                 }
+                // front wall
                 if (maze[rowIndex][columnIndex - 1] == 1){
-                    panels.push(...getPanelsWrapper([2 * rowIndex, 2 * rowIndex + 1], 0, 2 * columnIndex, 'Z', frontWallColour))
+                    const transform: Transform = {
+                        position: {x: 2 * rowIndex + 2, y: 0, z: 2 * columnIndex},
+                        orientation: frontWallOrientation,
+                        scale: frontWallScale
+                    }
+                    const panel = new Panel(transform, frontWallColour);
+                    panels.push(panel)
                 }
+                // back wall
                 if (maze[rowIndex][columnIndex + 1] == 1){
-                    panels.push(...getPanelsWrapper([2 * rowIndex, 2 * rowIndex + 1], 0, 2 * columnIndex + 2, '-Z', backWallColour))
+                    const transform: Transform = {
+                        position: {x: 2 * rowIndex, y: 0, z: 2 * columnIndex + 2},
+                        orientation: backWallOrientation,
+                        scale: backWallScale
+                    }
+                    const panel = new Panel(transform, backWallColour);
+                    panels.push(panel)
                 }
             }
 
+
+            // add collisions
             if (maze[rowIndex][columnIndex] == 1){
                 let boundaryTransform: Transform = {
                     position: {x: 2 * rowIndex, y: 0, z: 2 * columnIndex},
@@ -84,24 +184,67 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
                 boundaries.push(new Boundary(boundaryTransform))
             }
 
+            // set start point
             if (maze[rowIndex][columnIndex] == 2){
                 startPositionX = 2 * rowIndex + 1
                 startPositionZ = 2 * columnIndex + 1
             }
 
+            // add finishing square
             if (maze[rowIndex][columnIndex] == 3){
-                flatPanels.push(...getPanelsWrapper([2 * rowIndex, 2 * rowIndex + 1], 0, [2 * columnIndex, 2 * columnIndex + 1], 'Y', [255,255,255]))
+                const transform: Transform = {
+                    position: {x: 2 * rowIndex, y: 0, z: 2 * columnIndex},
+                    orientation: Matrix3.identity(),
+                    scale: leftWallScale
+                }
+                const panel = new Panel(transform, [255,255,255]);
+                panels.push(panel)
             }
         }
     }
 
+    // for (let i = 0; i < panels.length; i++){
+    //     const panel = panels[i];
+    //     const orientation = panel.transform.orientation;
+
+    //     let adjacentPanelIndex = -1;
+        
+    //     // while (true){
+    //     //     adjacentPanelIndex = panels.findIndex(iterPanel => {
+    //     //         return (Matrix3.equals(iterPanel.transform.orientation, orientation)) &&  arePanelsAdjacent(panel, iterPanel) && panel != iterPanel;
+    //     //     })
+
+    //     //     if (adjacentPanelIndex == -1) break;
+
+    //     //     panels.splice(adjacentPanelIndex)
+    //     // }
+
+    //     // while (true) {
+    //     //     const adjacentPanelIndex = panels.findIndex(iterPanel =>
+    //     //         iterPanel !== panel &&
+    //     //         Matrix3.equals(iterPanel.transform.orientation, orientation) &&
+    //     //         arePanelsAdjacent(panel, iterPanel)
+    //     //     );
+
+    //     //     if (adjacentPanelIndex === -1) {
+    //     //         break;
+    //     //     }
+
+    //     //     const adjacentPanel = panels[adjacentPanelIndex];
+
+    //     //     // Expand panel to cover both panels
+    //     //     mergePanels(panel, adjacentPanel);
+
+    //     //     // Remove only the merged panel
+    //     //     panels.splice(adjacentPanelIndex, 1);
+    //     // }
+    // }
+
     panels.forEach(panel => {
-        panel.transform.scale.y = 4
         scene.add(panel)
     })
 
     flatPanels.forEach(panel => {
-        panel.transform.scale.y = 4
         scene.add(panel)
     })
 
@@ -112,58 +255,17 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
     return {x: startPositionX, y: 1.5, z: startPositionZ}
 }
 
-function getPanelsWrapper(
-    x: [number, number] | number,
-    y: [number, number] | number,
-    z: [number, number] | number,
-    direction: PanelDirection,
-    colour: [number, number, number] = [0,0,255]
-): Panel[] {
-    let normal = {x: 0, y: 0, z: 0}
-    switch (direction) {
-        case 'X':
-            normal.x = 1
-            break;
-        case '-X':
-            normal.x = -1
-            break;
-        case 'Y':
-            normal.y = 1
-            break;
-        case '-Y':
-            normal.y = -1
-            break;
-        case 'Z':
-            normal.z = 1
-            break;
-        case '-Z':
-            normal.z = -1
-            break;
+function arePanelsAdjacent(p1: Panel, p2: Panel): Boolean {
+    // check if x or z are equal. if z equal, x must be equal to other x + scale (1)
+    const pos1 = p1.transform.position;
+    const pos2 = p2.transform.position;
+
+    const otherSidePos1 = Vec3.add(pos1, Matrix3.apply(p1.transform.orientation, p1.transform.scale));
+    const otherSidePos2 = Vec3.add(pos2, Matrix3.apply(p2.transform.orientation, p2.transform.scale));
+
+    if (Vec3.equals(pos1, otherSidePos2) || Vec3.equals(pos2, otherSidePos1)){
+        return true;
     }
 
-    const xRange: [number, number] = typeof(x) == "number" ? [x, x] : x
-    const yRange: [number, number] = typeof(y) == "number" ? [y, y] : y
-    const zRange: [number, number] = typeof(z) == "number" ? [z, z] : z
-    return getPanels(xRange, yRange, zRange, normal, colour)
+    return false;
 }
-
-function getPanels(xRange: [number, number], yRange: [number, number], zRange: [number, number], normal: Vec3, colour: [number, number, number] = [0,0,255]): Panel[] {
-    const panels: Panel[] = []
-    let position: Vec3
-    let panelTransform: Transform
-
-    for (let x = xRange[0]; x <= xRange[1]; x++){
-        for (let y = yRange[0]; y <= yRange[1]; y++){
-            for (let z = zRange[0]; z <= zRange[1]; z++){
-                position = {x: x, y: y, z: z}
-
-                panelTransform = MazePanelTypes.getPanelTransform(position, normal)
-                // maybe attach collision here
-                panels.push(new Panel(panelTransform, colour))
-            }
-        }
-    }
-        
-    return panels
-}
-
