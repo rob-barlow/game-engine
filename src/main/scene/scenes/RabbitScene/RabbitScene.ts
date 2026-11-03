@@ -2,7 +2,7 @@ import { Controller } from "../../../controls/in-game/controllers/Controller";
 import { Matrix3, Transform } from "../../../maths/index";
 import Rabbit from "../../game-objects/Rabbit";
 import { Scene } from "../../Scene";
-import { addDrone, addPlayer } from "../Extensions";
+import { addDrone } from "../Extensions";
 
 export function createRabbitScene(): {scene: Scene, controllers: Controller[]} {
     const scene = new Scene();

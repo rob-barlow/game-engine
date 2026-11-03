@@ -1,11 +1,8 @@
-import AssetManager from "../../../app/AssetManager";
 import { CanvasSize } from "../../../utils/types";
 
 class FrameBufferProgram {
     positionBuffer: WebGLBuffer
     textureCoordBuffer: WebGLBuffer
-
-    texture: WebGLTexture
 
     positionAttributeLocation: number;
     textureCoordAttributeLocation: number;
@@ -17,7 +14,7 @@ class FrameBufferProgram {
     gl: WebGLRenderingContext;
     size: CanvasSize;
     
-    constructor(gl : WebGLRenderingContext, size: CanvasSize, assetManager: AssetManager){
+    constructor(gl : WebGLRenderingContext, size: CanvasSize){
         this.gl = gl;
         this.size = size;
         this.gl.activeTexture(this.gl.TEXTURE0);
@@ -31,8 +28,6 @@ class FrameBufferProgram {
         // position buffer
         this.positionBuffer = this.gl.createBuffer();
         this.textureCoordBuffer = this.gl.createBuffer();
-        this.texture = this.gl.createTexture();
-
 
         this.positionAttributeLocation = this.gl.getAttribLocation(this.program, 'aVertexPosition');
         this.textureCoordAttributeLocation = this.gl.getAttribLocation(this.program, "aTextureCoord");
@@ -64,17 +59,9 @@ class FrameBufferProgram {
         this.gl.enableVertexAttribArray(this.textureCoordAttributeLocation);
         this.gl.vertexAttribPointer(this.textureCoordAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texVertices), this.gl.STATIC_DRAW);
-
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
-
-        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGB, this.size.width, this.size.height, 0, this.gl.RGB, this.gl.UNSIGNED_BYTE, null)
         
         this.screenTextureUniformLocation = this.gl.getUniformLocation(this.program, "uScreenTexture");
         this.gl.uniform1i(this.screenTextureUniformLocation, 0)
-
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
     }
 }
 

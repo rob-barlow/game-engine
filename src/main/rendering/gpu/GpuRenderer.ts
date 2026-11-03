@@ -3,7 +3,7 @@ import { Scene } from "../../scene/Scene";
 import { CanvasSize } from "../../utils/types";
 import { Renderer } from "../Renderer";
 import GeometryPass from "./passes/GeometryPass";
-import PresentPass from "./passes/PresentPass";
+import DarknessProgram from "./programs/DarknessProgram";
 import FrameBufferProgram from "./programs/FrameBufferProgram";
 
 export class GpuRenderer implements Renderer {
@@ -13,11 +13,18 @@ export class GpuRenderer implements Renderer {
     gl: WebGLRenderingContext;
 
     geometryPass: GeometryPass;
-    presentPass: PresentPass;
     
-    frameBuffer: WebGLFramebuffer;
     renderBuffer: WebGLFramebuffer;
+
+    frameBuffer: WebGLFramebuffer;
     frameBufferTexture: WebGLTexture;
+
+    // frameBuffer: WebGLFramebuffer;
+    // frameBufferTexture: WebGLTexture;
+
+    frameBufferProgram: FrameBufferProgram;
+    darknessProgram: DarknessProgram;
+
 
     constructor(assetManager: AssetManager){
         this.assetManager = assetManager;
@@ -34,25 +41,20 @@ export class GpuRenderer implements Renderer {
         this.gl = canvas.getContext("webgl") as WebGLRenderingContext;
         
         this.geometryPass = new GeometryPass(this.gl, this.size, this.assetManager);
-        this.presentPass = new PresentPass(this.gl, this.size, this.assetManager);
-
-        this.frameBuffer = this.gl.createFramebuffer();
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.frameBuffer);
-        this.gl.framebufferTexture2D(
-            this.gl.FRAMEBUFFER,
-            this.gl.COLOR_ATTACHMENT0,
-            this.gl.TEXTURE_2D,
-            this.presentPass.program.texture,
-            0
-        );
-
-        this.renderBuffer = this.gl.createRenderbuffer();
-        this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, this.renderBuffer);
-        this.gl.renderbufferStorage(this.gl.RENDERBUFFER, this.gl.DEPTH_COMPONENT16, this.size.width, this.size.height);
-        this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, null);
-
-        this.gl.framebufferRenderbuffer(this.gl.FRAMEBUFFER, this.gl.DEPTH_ATTACHMENT, this.gl.RENDERBUFFER, this.renderBuffer);
         
+        const {
+            frameBufferTexture,
+            frameBuffer,
+            renderBuffer,
+        } = this.createFrameAndRenderBuffer();
+
+        this.frameBufferTexture = frameBufferTexture;
+        this.frameBuffer = frameBuffer;
+        this.renderBuffer = renderBuffer;
+
+        this.frameBufferProgram = new FrameBufferProgram(this.gl, this.size);
+        this.darknessProgram = new DarknessProgram(this.gl, this.size, this.frameBufferTexture);
+
         // face culling
         this.gl.enable(this.gl.CULL_FACE);
         this.gl.cullFace(this.gl.FRONT)
@@ -70,6 +72,100 @@ export class GpuRenderer implements Renderer {
             console.log("SHIT")
         }
     }
+
+    public render(scene: Scene) {
+        // SET UP
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.frameBuffer);
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+        this.gl.enable(this.gl.DEPTH_TEST)
+        
+        // GEOMETRY PASS
+        this.geometryPass.render(scene);
+
+        this.gl.activeTexture(this.gl.TEXTURE0);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.frameBufferTexture);
+
+        // STAR PASS
+
+        // DARKNESS PASS
+        // this.darknessPass();
+
+        // PRESENT PASS
+        this.present();
+    }
+
+    darknessPass(){
+        this.gl.useProgram(this.darknessProgram.program);
+
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.darknessProgram.positionBuffer);
+        this.gl.enableVertexAttribArray(this.darknessProgram.positionAttributeLocation);
+        this.gl.vertexAttribPointer(this.darknessProgram.positionAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
+
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.darknessProgram.textureCoordBuffer);
+        this.gl.enableVertexAttribArray(this.darknessProgram.textureCoordAttributeLocation);
+        this.gl.vertexAttribPointer(this.darknessProgram.textureCoordAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
+
+        this.gl.drawArrays(this.gl.TRIANGLES, 0, 12);
+    }
+
+    present(){
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+        
+        this.gl.disable(this.gl.DEPTH_TEST)
+
+        this.gl.useProgram(this.frameBufferProgram.program);
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
+
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.frameBufferProgram.positionBuffer);
+        this.gl.enableVertexAttribArray(this.frameBufferProgram.positionAttributeLocation);
+        this.gl.vertexAttribPointer(this.frameBufferProgram.positionAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
+
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.frameBufferProgram.textureCoordBuffer);
+        this.gl.enableVertexAttribArray(this.frameBufferProgram.textureCoordAttributeLocation);
+        this.gl.vertexAttribPointer(this.frameBufferProgram.textureCoordAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
+
+        this.gl.activeTexture(this.gl.TEXTURE0);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.frameBufferTexture);
+
+        this.gl.drawArrays(this.gl.TRIANGLES, 0, 12);
+    }
+
+    resize(){
+    }
+
+    createFrameAndRenderBuffer(){
+        const frameBufferTexture = this.gl.createTexture();
+        this.gl.bindTexture(this.gl.TEXTURE_2D, frameBufferTexture);
+
+        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGB, this.size.width, this.size.height, 0, this.gl.RGB, this.gl.UNSIGNED_BYTE, null)
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+
+        const frameBuffer = this.gl.createFramebuffer();
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, frameBuffer);
+
+        this.gl.framebufferTexture2D(
+            this.gl.FRAMEBUFFER,
+            this.gl.COLOR_ATTACHMENT0,
+            this.gl.TEXTURE_2D,
+            frameBufferTexture,
+            0
+        );
+
+        const renderBuffer = this.gl.createRenderbuffer();
+        this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, renderBuffer);
+        this.gl.renderbufferStorage(this.gl.RENDERBUFFER, this.gl.DEPTH_COMPONENT16, this.size.width, this.size.height);
+        this.gl.framebufferRenderbuffer(this.gl.FRAMEBUFFER, this.gl.DEPTH_ATTACHMENT, this.gl.RENDERBUFFER, renderBuffer);
+
+        this.gl.bindRenderbuffer(this.gl.RENDERBUFFER, null);
+
+        return {frameBufferTexture, frameBuffer, renderBuffer};
+    }
+}
+
+
 
 //     render(scene: Scene) {
 //     // 1. Build draw list / culling
@@ -92,49 +188,3 @@ export class GpuRenderer implements Renderer {
 //     this.present();
 // }
     
-    public render(scene: Scene) {
-        // SET UP
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.frameBuffer);
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-        this.gl.enable(this.gl.DEPTH_TEST)
-        
-        // GEOMETRY PASS
-        this.geometryPass.render(scene);
-
-        // DARKNESS PASS
-
-        // PRESENT PASS
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-        
-        this.gl.disable(this.gl.DEPTH_TEST)
-        this.presentPass.render();
-    }
-
-    // present(){
-    //     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
-    //     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-        
-    //     this.gl.disable(this.gl.DEPTH_TEST)
-
-    //     this.gl.useProgram(this.program.program);
-    //     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
-
-    //     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.program.positionBuffer);
-    //     this.gl.enableVertexAttribArray(this.program.positionAttributeLocation);
-    //     this.gl.vertexAttribPointer(this.program.positionAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
-
-    //     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.program.textureCoordBuffer);
-    //     this.gl.enableVertexAttribArray(this.program.textureCoordAttributeLocation);
-    //     this.gl.vertexAttribPointer(this.program.textureCoordAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
-
-    //     this.gl.activeTexture(this.gl.TEXTURE0);
-    //     this.gl.bindTexture(this.gl.TEXTURE_2D, this.program.texture);
-
-    //     this.gl.drawArrays(this.gl.LINES, 0, 12);
-    // }
-
-    resize(){
-    }
-}
-
