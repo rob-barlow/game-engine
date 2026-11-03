@@ -19,8 +19,6 @@ export default class PresentPass implements Pass {
     }
 
     public render() {
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-
         this.gl.useProgram(this.program.program);
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
 
@@ -35,6 +33,6 @@ export default class PresentPass implements Pass {
         this.gl.activeTexture(this.gl.TEXTURE0);
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.program.texture);
 
-        this.gl.drawArrays(this.gl.LINES, 0, 12);
+        this.gl.drawArrays(this.gl.TRIANGLES, 0, 12);
     }
 }
