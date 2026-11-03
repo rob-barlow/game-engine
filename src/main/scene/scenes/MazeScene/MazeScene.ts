@@ -195,7 +195,7 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
                 const transform: Transform = {
                     position: {x: 2 * rowIndex, y: 0, z: 2 * columnIndex},
                     orientation: Matrix3.identity(),
-                    scale: leftWallScale
+                    scale: {x: 2, y: 1, z: 2}
                 }
                 const panel = new Panel(transform, [255,255,255]);
                 panels.push(panel)

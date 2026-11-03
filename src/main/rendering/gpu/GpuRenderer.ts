@@ -14,13 +14,14 @@ export class GpuRenderer implements Renderer {
 
     geometryPass: GeometryPass;
     
-    renderBuffer: WebGLFramebuffer;
+    
+    renderBufferA: WebGLFramebuffer;
+    frameBufferA: WebGLFramebuffer;
+    frameBufferTextureA: WebGLTexture;
 
-    frameBuffer: WebGLFramebuffer;
-    frameBufferTexture: WebGLTexture;
-
-    // frameBuffer: WebGLFramebuffer;
-    // frameBufferTexture: WebGLTexture;
+    renderBufferB: WebGLFramebuffer;
+    frameBufferB: WebGLFramebuffer;
+    frameBufferTextureB: WebGLTexture;
 
     frameBufferProgram: FrameBufferProgram;
     darknessProgram: DarknessProgram;
@@ -43,17 +44,27 @@ export class GpuRenderer implements Renderer {
         this.geometryPass = new GeometryPass(this.gl, this.size, this.assetManager);
         
         const {
-            frameBufferTexture,
-            frameBuffer,
-            renderBuffer,
+            frameBufferTexture: frameBufferTextureA,
+            frameBuffer: frameBufferA,
+            renderBuffer: renderBufferA,
         } = this.createFrameAndRenderBuffer();
 
-        this.frameBufferTexture = frameBufferTexture;
-        this.frameBuffer = frameBuffer;
-        this.renderBuffer = renderBuffer;
+        this.frameBufferTextureA = frameBufferTextureA;
+        this.frameBufferA = frameBufferA;
+        this.renderBufferA = renderBufferA;
+
+        const {
+            frameBufferTexture: frameBufferTextureB,
+            frameBuffer: frameBufferB,
+            renderBuffer: renderBufferB,
+        } = this.createFrameAndRenderBuffer();
+
+        this.frameBufferTextureB = frameBufferTextureB;
+        this.frameBufferB = frameBufferB;
+        this.renderBufferB = renderBufferB;
 
         this.frameBufferProgram = new FrameBufferProgram(this.gl, this.size);
-        this.darknessProgram = new DarknessProgram(this.gl, this.size, this.frameBufferTexture);
+        this.darknessProgram = new DarknessProgram(this.gl, this.size, this.frameBufferTextureA);
 
         // face culling
         this.gl.enable(this.gl.CULL_FACE);
@@ -75,22 +86,30 @@ export class GpuRenderer implements Renderer {
 
     public render(scene: Scene) {
         // SET UP
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.frameBuffer);
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.frameBufferA);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         this.gl.enable(this.gl.DEPTH_TEST)
         
         // GEOMETRY PASS
         this.geometryPass.render(scene);
 
+        this.gl.disable(this.gl.DEPTH_TEST)
         this.gl.activeTexture(this.gl.TEXTURE0);
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.frameBufferTexture);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.frameBufferTextureA);
+
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.frameBufferB);
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+        
+        // DARKNESS PASS
+        this.darknessPass();
+
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.frameBufferTextureB);
 
         // STAR PASS
 
-        // DARKNESS PASS
-        // this.darknessPass();
-
         // PRESENT PASS
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
         this.present();
     }
 
@@ -105,17 +124,11 @@ export class GpuRenderer implements Renderer {
         this.gl.enableVertexAttribArray(this.darknessProgram.textureCoordAttributeLocation);
         this.gl.vertexAttribPointer(this.darknessProgram.textureCoordAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
 
-        this.gl.drawArrays(this.gl.TRIANGLES, 0, 12);
+        this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
     }
 
     present(){
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-        
-        this.gl.disable(this.gl.DEPTH_TEST)
-
         this.gl.useProgram(this.frameBufferProgram.program);
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.frameBufferProgram.positionBuffer);
         this.gl.enableVertexAttribArray(this.frameBufferProgram.positionAttributeLocation);
@@ -125,8 +138,6 @@ export class GpuRenderer implements Renderer {
         this.gl.enableVertexAttribArray(this.frameBufferProgram.textureCoordAttributeLocation);
         this.gl.vertexAttribPointer(this.frameBufferProgram.textureCoordAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
 
-        this.gl.activeTexture(this.gl.TEXTURE0);
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.frameBufferTexture);
 
         this.gl.drawArrays(this.gl.TRIANGLES, 0, 12);
     }
