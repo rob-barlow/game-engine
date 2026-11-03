@@ -83,8 +83,18 @@ export default class GeometryPass implements Pass {
             }
     
             for (const batch of batches.values()) {
+                    this.renderBatch(batch, viewMatrix);
                 if (batch.length > gpuInstancingBoundary){
+                    this.gl.activeTexture(this.gl.TEXTURE0);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, this.waterTexture);
+                    
+                    this.gl.activeTexture(this.gl.TEXTURE1);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, this.wallTexture);
+                    
+                    this.gpuInstancingProgram.ext.vertexAttribDivisorANGLE(this.gpuInstancingProgram.colourAttributeLocation, 1);
                     this.instanceBatch(batch, viewMatrix);
+                    this.gpuInstancingProgram.ext.vertexAttribDivisorANGLE(this.gpuInstancingProgram.colourAttributeLocation, 0);
+
                 }
                 else {
                     this.renderBatch(batch, viewMatrix);
@@ -94,6 +104,12 @@ export default class GeometryPass implements Pass {
     
     instanceBatch(batch: GameObject[], viewMatrix: Matrix4){
         this.gl.useProgram(this.gpuInstancingProgram.program);
+        
+        this.gl.activeTexture(this.gl.TEXTURE0);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.waterTexture)
+        
+        this.gl.activeTexture(this.gl.TEXTURE1);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.wallTexture)
         
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.positionBuffer);
         this.gl.vertexAttribPointer(this.gpuInstancingProgram.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
@@ -179,6 +195,7 @@ export default class GeometryPass implements Pass {
 
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW)
 
+        // this.gl.drawArrays(this.gl.LINES, 0, vertices.length)
         this.gl.drawArrays(this.gl.TRIANGLES, 0, vertices.length)
     }
     
