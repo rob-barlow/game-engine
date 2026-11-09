@@ -172,7 +172,6 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
                 }
             }
 
-
             // add collisions
             if (maze[rowIndex][columnIndex] == 1){
                 let boundaryTransform: Transform = {

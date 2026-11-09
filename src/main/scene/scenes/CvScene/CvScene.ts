@@ -28,7 +28,7 @@ export function createCvScene(): {scene: Scene, controllers: Controller[]} {
         
     const cvCamera = new CvCamera(cvCameraTransform)
     
-    const cvCameraController = new CvCameraController(cvCamera)
+    const cvCameraController = new CvCameraController([cvCamera])
     
     scene.add(cvCamera);
     scene.setActiveCamera(cvCamera);
@@ -88,7 +88,7 @@ function addText(scene: Scene) {
         
     const text: GameObject = new TextObject(textTransform, letters)
 
-    const textController = new TextController(text)
+    const textController = new TextController([text])
 
     scene.add(text)
 

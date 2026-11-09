@@ -14,7 +14,6 @@ export class GpuRenderer implements Renderer {
 
     geometryPass: GeometryPass;
     
-    
     renderBufferA: WebGLFramebuffer;
     frameBufferA: WebGLFramebuffer;
     frameBufferTextureA: WebGLTexture;
@@ -101,7 +100,7 @@ export class GpuRenderer implements Renderer {
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
         
         // DARKNESS PASS
-        this.darknessPass();
+        this.pixelationPass();
 
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.frameBufferTextureB);
 
@@ -113,7 +112,7 @@ export class GpuRenderer implements Renderer {
         this.present();
     }
 
-    darknessPass(){
+    pixelationPass(){
         this.gl.useProgram(this.darknessProgram.program);
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.darknessProgram.positionBuffer);
@@ -175,8 +174,6 @@ export class GpuRenderer implements Renderer {
         return {frameBufferTexture, frameBuffer, renderBuffer};
     }
 }
-
-
 
 //     render(scene: Scene) {
 //     // 1. Build draw list / culling

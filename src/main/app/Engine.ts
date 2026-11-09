@@ -16,6 +16,7 @@ import { createRabbitScene } from "../scene/scenes/RabbitScene/RabbitScene";
 import { createTestScene } from "../scene/scenes/TestScene/TestScene";
 import { createCvScene } from "../scene/scenes/CvScene/CvScene";
 import AssetManager from "./AssetManager";
+import { createBoidsScene } from "../scene/scenes/BoidsScene/BoidsScene";
 
 export class Engine{
     renderer: Renderer = new CpuRenderer();
@@ -76,10 +77,11 @@ export class Engine{
         this.controllers.forEach(controller => {
             intent = controller.getIntent();
 
-            if (intent != null && controller.target.movementSystem){
-                controller.target.movementSystem.move(controller.target, intent, this.scene, dt)
-            }
-        })
+            if (intent != null){
+                for (const target of controller.targets) {
+                if (target.movementSystem) 
+                    target.movementSystem.move(target, intent, this.scene, dt)
+        }}})
     }
 
     frame = (now: number) => {
@@ -128,6 +130,9 @@ export class Engine{
             case Scenes.Test:
                 ({scene, controllers} = createTestScene());
                 break;
+            case Scenes.Boids:
+                ({scene, controllers} = createBoidsScene());
+                break;
             default:
                 ({scene, controllers} = createCvScene());
                 break;
@@ -144,6 +149,8 @@ export class Engine{
                 numOfTriangles+= currentMesh.triangles.length
             }
         })
+
+        console.log(`Scene changed to ${sceneEnum}. Number of triangles: ${numOfTriangles}`)
         
         this.controllers.forEach(controller => {
             controller.setInputReader(this.inputReader)

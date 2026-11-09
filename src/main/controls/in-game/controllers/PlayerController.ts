@@ -5,18 +5,23 @@ import { Controller } from "./Controller";
 import InputReader from "../InputReader";
 
 export class PlayerController implements Controller {
-    target: GameObject;
+    targets: GameObject[];
     inputReader?: InputReader 
     settings: GameSettings
 
-    constructor(target: GameObject, settings?: GameSettings, inputReader?: InputReader){
-        this.target = target;
+    constructor(target: GameObject, settings?: GameSettings, inputReader?: InputReader)
+    constructor(targets: GameObject[], settings?: GameSettings, inputReader?: InputReader)
+    
+    constructor(targetOrTargets: GameObject | GameObject[], settings?: GameSettings, inputReader?: InputReader) {
+        this.targets = Array.isArray(targetOrTargets)
+            ? targetOrTargets
+            : [targetOrTargets];
         this.inputReader = inputReader
         this.settings = settings ?? new GameSettings()
     }
 
     control(target: GameObject): void {
-        this.target = target
+        this.targets.push(target);
     }
 
     getIntent(): Intent | null {

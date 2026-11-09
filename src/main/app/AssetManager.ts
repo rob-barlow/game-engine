@@ -8,7 +8,7 @@ export default class AssetManager {
     async load(){
         this.imageMap = new Map<string, HTMLImageElement>();
 
-        const urls = ["./wall.jpg", "./water.jpg"];
+        const urls = ["./cave-wall.webp", "./water.jpg"];
 
         for (let i = 0; i < urls.length; i++) {
             const url = urls[i];
@@ -16,6 +16,7 @@ export default class AssetManager {
             const image =  new Image();
 
             image.src = url
+            // image.src = "izzyjoe.jpg"
             await image.decode();
             this.imageMap.set(url, image);
         }

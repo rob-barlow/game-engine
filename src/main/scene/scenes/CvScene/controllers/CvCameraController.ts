@@ -5,20 +5,20 @@ import { Intent } from "../../../../maths/Intent";
 import { GameObject } from "../../../game-objects/GameObject";
 
 export class CvCameraController implements Controller {
-    target: GameObject;
+    targets: GameObject[];
     inputReader?: InputReader 
     settings: GameSettings
 
-    constructor(target: GameObject, settings?: GameSettings, inputReader?: InputReader){
-        this.target = target;
+    constructor(targets: GameObject[], settings?: GameSettings, inputReader?: InputReader){
+        this.targets = targets;
         this.inputReader = inputReader
         this.settings = settings ?? new GameSettings()
     }
 
     control(target: GameObject): void {
-        this.target = target
+        this.targets.push(target);
     }
-
+    
     getIntent(): Intent | null {
         if (!this.inputReader) return null
         let intent = Intent.empty();

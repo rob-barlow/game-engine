@@ -45,11 +45,12 @@ export default class GeometryPass implements Pass {
         this.waterTexture = this.loadTexture(waterImageUrl);
 
         this.gl.activeTexture(this.gl.TEXTURE1);
-        const wallImageUrl = "./wall.jpg";
+        const wallImageUrl = "./cave-wall.webp";
         this.wallTexture = this.loadTexture(wallImageUrl);
 
         this.gl.uniform1i(this.gl.getUniformLocation(this.gpuInstancingProgram.program, "uWaterTexture"), 0)
         this.gl.uniform1i(this.gl.getUniformLocation(this.gpuInstancingProgram.program, "uBrickTexture"), 1)
+        this.gpuInstancingProgram.ext.vertexAttribDivisorANGLE(this.gpuInstancingProgram.colourAttributeLocation, 0);
     }
 
     public render(scene: Scene) {
@@ -83,7 +84,6 @@ export default class GeometryPass implements Pass {
             }
     
             for (const batch of batches.values()) {
-                    this.renderBatch(batch, viewMatrix);
                 if (batch.length > gpuInstancingBoundary){
                     this.gl.activeTexture(this.gl.TEXTURE0);
                     this.gl.bindTexture(this.gl.TEXTURE_2D, this.waterTexture);
@@ -195,7 +195,6 @@ export default class GeometryPass implements Pass {
 
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW)
 
-        // this.gl.drawArrays(this.gl.LINES, 0, vertices.length)
         this.gl.drawArrays(this.gl.TRIANGLES, 0, vertices.length)
     }
     

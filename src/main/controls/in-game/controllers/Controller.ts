@@ -4,7 +4,7 @@ import { GameObject } from "../../../scene/game-objects/GameObject";
 import InputReader from "../InputReader";
 
 export interface Controller {
-    target: GameObject;
+    targets: GameObject[];
     inputReader?: InputReader
     settings?: GameSettings
     

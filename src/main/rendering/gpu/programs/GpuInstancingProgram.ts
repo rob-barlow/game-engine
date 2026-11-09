@@ -94,7 +94,7 @@ class GpuInstancingProgram {
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colourBuffer);
         this.gl.enableVertexAttribArray(this.colourAttributeLocation);
         this.gl.vertexAttribPointer(this.colourAttributeLocation, 4, this.gl.FLOAT, false, 0, 0);
-        // this.ext.vertexAttribDivisorANGLE(this.colourAttributeLocation, 1);
+        this.ext.vertexAttribDivisorANGLE(this.colourAttributeLocation, 1);
 
         const textureCoordinates = [
             0.0, 0.0,
