@@ -1,5 +1,5 @@
 import { GameObject } from "../../../game-objects/GameObject";
-import { Transform } from "../../../../maths";
+import { Transform, Vec3 } from "../../../../maths";
 import Mesh from "../../../../meshes/Mesh";
 import BoidMovementSystem from "../movement-systems/BoidMovementSystem";
 
@@ -7,12 +7,12 @@ export class Boid extends GameObject {
     mesh?: Mesh = {
         triangles:  [
             // top face
-            [{x: 0, y: 0, z: 0},
-            {x: 0.5, y: 0, z: 1},
-            {x: 0.5, y: 0, z: 0.2}],
-            [{x: 0.5, y: 0, z: 0.2},
-            {x: 0.5, y: 0, z: 1},
-            {x: 1, y: 0, z: 0}],
+            [{x: -0.5, y: 0, z: -0.5},
+            {x: 0, y: 0, z: 0.5},
+            {x: 0, y: 0, z: -0.3}],
+            [{x: 0, y: 0, z: -0.3},
+            {x: 0, y: 0, z: 0.5},
+            {x: 0.5, y: 0, z: -0.5}],
 
             // // front face
             // [{x: 0, y: -1, z: 0},
@@ -59,6 +59,9 @@ export class Boid extends GameObject {
 
     movementSystem = new BoidMovementSystem();
     
+    //directionToCentre: Vec3 = {x: 1, y: 0, z: 0}
+
+    angle: number = 0;
     
     constructor(transform: Transform, colour?: [number, number, number]){
         super(transform);

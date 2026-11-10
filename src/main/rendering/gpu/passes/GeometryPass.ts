@@ -6,11 +6,12 @@ import Rabbit from "../../../scene/game-objects/Rabbit";
 import { Letter } from "../../../scene/scenes/CvScene/game-objects/Letter";
 import { TextObject } from "../../../scene/scenes/CvScene/game-objects/TextObject";
 import { Transform } from "../../../maths/Transform";
-import { Matrix4 } from "../../../maths";
+import { Matrix3, Matrix4 } from "../../../maths";
 import GpuInstancingProgram from "../programs/GpuInstancingProgram";
 import RegularProgram from "../programs/RegularProgram";
 import { CanvasSize } from "../../../utils/types";
 import AssetManager from "../../../app/AssetManager";
+import { Boid } from "../../../scene/scenes/BoidsScene/game-objects/Boid";
 
 const gpuInstancingBoundary = 5;
 
@@ -95,7 +96,7 @@ export default class GeometryPass implements Pass {
                     this.renderBatch(batch, viewMatrix);
                 }
             }
-        }
+    }
     
     instanceBatch(batch: GameObject[], viewMatrix: Matrix4){
         this.gpuInstancingProgram.ext.vertexAttribDivisorANGLE(this.gpuInstancingProgram.colourAttributeLocation, 1);
@@ -161,8 +162,6 @@ export default class GeometryPass implements Pass {
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colours.map(v => v/255)), this.gl.STATIC_DRAW);
 
         
-        // this.ext.vertexAttribDivisorANGLE(this.colourAttributeLocation, 1);
-
         this.gpuInstancingProgram.ext.drawArraysInstancedANGLE(
             this.gl.TRIANGLES,
             0,             // offset
@@ -170,8 +169,101 @@ export default class GeometryPass implements Pass {
             worldMatrices.length,  // num instances
         );
 
-        // this.gpuInstancingProgram.ext.vertexAttribDivisorANGLE(this.gpuInstancingProgram.colourAttributeLocation, 1);
+        // if (batch[0] instanceof Boid){
+        //     for (let i = 0; i < numInstances; i++){
+        //         const currentBoid = batch[i]
 
+        //         const mesh = [
+        //             0.45,0,0.2,
+        //             0.45,0,2,
+        //             0.55,0,2,
+        //             0.45,0,0.2,
+        //             0.55,0,2,
+        //             0.55,0,0.2,
+        //         ]
+
+        //         const triangles = [
+        //             [
+        //                 {x: 0.45, y: 0, z: 0.2},
+        //                 {x: 0.45, y: 0, z: 2},
+        //                 {x: 0.55, y: 0, z: 2},
+        //             ],
+        //             [
+        //                 {x: 0.45, y: 0, z: 0.2},
+        //                 {x: 0.55, y: 0, z: 2},
+        //                 {x: 0.55, y: 0, z: 0.2},
+        //             ]
+        //             ]
+
+        //         this.gl.useProgram(this.regularProgram.program);
+        //         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.regularProgram.positionBuffer);
+        //         this.gl.vertexAttribPointer(this.regularProgram.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
+
+        //         this.gl.uniformMatrix4fv(this.regularProgram.viewMatrixUniformLocation, false, Matrix4.toGlslArray(viewMatrix))
+                        
+        //         const vertices: number[] = []
+                
+        //             const worldMatrix = Transform.getWorldMatrix(currentBoid.transform)
+        //             this.gl.uniform3fv(this.regularProgram.colourUniformLocation, [1,1,1]);
+        //             this.gl.uniformMatrix4fv(this.regularProgram.worldMatrixUniformLocation, false, Matrix4.toGlslArray(worldMatrix))
+                    
+        //             for (const triangle of triangles){
+        //                 for (const vertex of triangle){
+        //                     const angle = (batch[i] as Boid).angle
+        //                     const m: Matrix3 = [
+        //                         [Math.cos(angle), 0, Math.sin(angle)],
+        //                         [0, 1, 0],
+        //                         [-Math.sin(angle), 0, Math.cos(angle)],
+        //                     ]
+
+        //                     const currentTriangle = Matrix3.apply(m, vertex)
+        //                     vertices.push(currentTriangle.x, currentTriangle.y, currentTriangle.z)
+        //                 }
+        //             }
+
+        //         // vertices.push(...mesh)
+
+        //         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW)
+
+        //         this.gl.drawArrays(this.gl.TRIANGLES, 0, vertices.length)
+        //     }
+        // //     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.positionBuffer);
+        // //     const arrowVertices = [0.5, 2, 0, 0.5, 2, 2.5]
+        // //     this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(arrowVertices), this.gl.STATIC_DRAW)
+
+        // //     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.worldMatrixBuffer)
+
+        // //     for (let i = 0; i < numInstances; i++){
+        // //         const angle = (batch[i] as Boid).angle
+        // //         const m: Matrix4 = [
+        // //             [Math.cos(angle), 0, Math.sin(angle), 0],
+        // //             [0, 1, 0, 0],
+        // //             [-Math.sin(angle), 0, Math.cos(angle), 0],
+        // //             [0, 0, 0, 1],
+        // //     ]
+        // //         const glslMatrix = Matrix4.toGlslArray(Matrix4.multiply(worldMatrices[i], m));
+        // //         for (let j = 0; j < 16; j++){
+        // //             this.gpuInstancingProgram.matrices[i][j] = glslMatrix[j];
+        // //         }
+        // //     };
+
+        // //     this.gl.bufferData(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.matrixData.byteLength, this.gl.DYNAMIC_DRAW);
+        // //     this.gl.bufferSubData(this.gl.ARRAY_BUFFER, 0, this.gpuInstancingProgram.matrixData);
+
+        // //     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.colourBuffer);
+        // //     this.gl.vertexAttribPointer(this.gpuInstancingProgram.colourAttributeLocation, 4, this.gl.FLOAT, false, 0, 0);
+        // //     const arrowColours = new Array(numInstances * 4).fill(1)
+
+        // //     this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(arrowColours), this.gl.STATIC_DRAW);
+
+        // //     this.gl.lineWidth(20);
+        // //     this.gpuInstancingProgram.ext.drawArraysInstancedANGLE(
+        // //     this.gl.LINES,
+        // //     0,             // offset
+        // //     2,   // num vertices per instance
+        // //     worldMatrices.length,  // num instances
+        // // );
+        // }
     }
 
     renderBatch(batch: GameObject[], viewMatrix: Matrix4){

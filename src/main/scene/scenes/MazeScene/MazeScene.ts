@@ -13,7 +13,7 @@ export function createMazeScene(): {scene: Scene, controllers: Controller[]} {
 
     const scene = new Scene();
     scene.postProcessingOptions = [
-        PostProcessingOptions.Pixelation,
+        // PostProcessingOptions.Pixelation,
         // PostProcessingOptions.Grayscale,
         // PostProcessingOptions.Kernel
     ]

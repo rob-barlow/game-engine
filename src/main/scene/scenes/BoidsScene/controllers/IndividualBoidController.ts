@@ -4,9 +4,10 @@ import { GameObject } from "../../../game-objects/GameObject";
 import { Controller } from "../../../../controls/in-game/controllers/Controller";
 import InputReader from "../../../../controls/in-game/InputReader";
 import { BoidsMasterController } from "./BoidsMasterController";
+import { Boid } from "../game-objects/Boid";
 
 export class IndividualBoidController implements Controller {
-    targets: GameObject[];
+    targets: Boid[];
     inputReader?: InputReader 
     settings: GameSettings
     masterController: BoidsMasterController;
@@ -16,14 +17,14 @@ export class IndividualBoidController implements Controller {
     
     constructor(targetOrTargets: GameObject | GameObject[], masterController: BoidsMasterController, settings?: GameSettings, inputReader?: InputReader) {
         this.targets = Array.isArray(targetOrTargets)
-            ? targetOrTargets
-            : [targetOrTargets];
+            ? targetOrTargets as Boid[]
+            : [targetOrTargets as Boid];
         this.inputReader = inputReader
         this.settings = settings ?? new GameSettings();
         this.masterController = masterController;
     }
 
-    control(target: GameObject): void {
+    control(target: Boid): void {
         this.targets.push(target);
     }
 

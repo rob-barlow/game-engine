@@ -11,3 +11,6 @@ export const farPlaneZ = 200;
 
 export const viewportLeft = 0;
 export const viewportTop = 0;
+
+export const BoidSpeed = 2;
+export const BoidRotationSpeed = 2;

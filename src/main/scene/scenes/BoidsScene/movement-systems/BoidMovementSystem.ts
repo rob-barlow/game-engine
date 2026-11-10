@@ -3,9 +3,7 @@ import { Intent } from "../../../../maths/Intent";
 import MovementSystem from "../../../../controls/in-game/movement-systems/MovementSystem";
 import { GameObject } from "../../../game-objects/GameObject";
 import { Scene } from "../../../Scene";
-
-const BoidSpeed = 0.5;
-const BoidRotationSpeed = 1;
+import { BoidRotationSpeed, BoidSpeed } from "../../../../utils/constants";
 
 export default class BoidMovementSystem implements MovementSystem {
     move(target: GameObject, cameraIntent: Intent, scene: Scene, dt: number){

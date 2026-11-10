@@ -110,5 +110,9 @@ export const Vec3 = {
 
     multiply(a: Vec3, b: Vec3): Vec3 {
         return {x: a.x * b.x, y: a.y * b.y, z: a.z * b.z}
+    },
+
+    magnitude(v: Vec3): number {
+        return Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z)
     }
 }
