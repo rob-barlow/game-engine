@@ -25,6 +25,8 @@ export default class GeometryPass implements Pass {
     wallTexture: WebGLTexture;
     waterTexture: WebGLTexture;
 
+    textures: Map<string, WebGLTexture>
+
     constructor(gl: WebGLRenderingContext, size: CanvasSize, assetManager: AssetManager){
         this.gl = gl;
         this.size = size;
@@ -40,17 +42,10 @@ export default class GeometryPass implements Pass {
         
         this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
 
-        this.gl.activeTexture(this.gl.TEXTURE0);
-        const waterImageUrl = "./water.jpg";
-        this.waterTexture = this.loadTexture(waterImageUrl);
-
-        this.gl.activeTexture(this.gl.TEXTURE1);
-        const wallImageUrl = "./cave-wall.webp";
-        this.wallTexture = this.loadTexture(wallImageUrl);
-
-        this.gl.uniform1i(this.gl.getUniformLocation(this.gpuInstancingProgram.program, "uWaterTexture"), 0)
-        this.gl.uniform1i(this.gl.getUniformLocation(this.gpuInstancingProgram.program, "uBrickTexture"), 1)
         this.gpuInstancingProgram.ext.vertexAttribDivisorANGLE(this.gpuInstancingProgram.colourAttributeLocation, 0);
+
+        this.loadTextures();
+
     }
 
     public render(scene: Scene) {
@@ -103,6 +98,8 @@ export default class GeometryPass implements Pass {
         }
     
     instanceBatch(batch: GameObject[], viewMatrix: Matrix4){
+        this.gpuInstancingProgram.ext.vertexAttribDivisorANGLE(this.gpuInstancingProgram.colourAttributeLocation, 1);
+
         this.gl.useProgram(this.gpuInstancingProgram.program);
         
         this.gl.activeTexture(this.gl.TEXTURE0);
@@ -127,8 +124,6 @@ export default class GeometryPass implements Pass {
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(meshVertices), this.gl.STATIC_DRAW);
 
         this.gpuInstancingProgram.setUniformMatrix(this.gpuInstancingProgram.viewMatrixUniformLocation, viewMatrix);
-
-        
 
         const worldMatrices: Matrix4[] = [];
         const colours: number[] = [];
@@ -162,7 +157,11 @@ export default class GeometryPass implements Pass {
         
         // set colours
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.colourBuffer);
+        this.gl.vertexAttribPointer(this.gpuInstancingProgram.colourAttributeLocation, 4, this.gl.FLOAT, false, 0, 0);
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colours.map(v => v/255)), this.gl.STATIC_DRAW);
+
+        
+        // this.ext.vertexAttribDivisorANGLE(this.colourAttributeLocation, 1);
 
         this.gpuInstancingProgram.ext.drawArraysInstancedANGLE(
             this.gl.TRIANGLES,
@@ -170,6 +169,9 @@ export default class GeometryPass implements Pass {
             meshVertices.length,   // num vertices per instance
             worldMatrices.length,  // num instances
         );
+
+        // this.gpuInstancingProgram.ext.vertexAttribDivisorANGLE(this.gpuInstancingProgram.colourAttributeLocation, 1);
+
     }
 
     renderBatch(batch: GameObject[], viewMatrix: Matrix4){
@@ -239,6 +241,22 @@ export default class GeometryPass implements Pass {
         }
 
         return texture;
+    }
+
+    loadTextures() {
+        this.textures = new Map<string, WebGLTexture>();
+        this.textures.set("uWaterTexture", 0);
+
+        this.gl.activeTexture(this.gl.TEXTURE0);
+        const waterImageUrl = "./water.jpg";
+        this.waterTexture = this.loadTexture(waterImageUrl);
+
+        this.gl.activeTexture(this.gl.TEXTURE1);
+        const wallImageUrl = "./cave-wall.webp";
+        this.wallTexture = this.loadTexture(wallImageUrl);
+
+        this.gl.uniform1i(this.gl.getUniformLocation(this.gpuInstancingProgram.program, "uWaterTexture"), 0)
+        this.gl.uniform1i(this.gl.getUniformLocation(this.gpuInstancingProgram.program, "uBrickTexture"), 1)
     }
 
     isPowerOf2(value: number) {

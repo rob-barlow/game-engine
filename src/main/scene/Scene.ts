@@ -5,12 +5,16 @@ import { Matrix4 } from "../maths/Matrix4";
 import { Transform } from "../maths/Transform";
 import { Vec3 } from "../maths/Vec3";
 import { Vec4 } from "../maths/Vec4";
+import { PostProcessingOptions } from "../rendering/gpu/PostProcessingOptions";
 import { GameObject } from "./game-objects/index";
 
 export class Scene {
     gameObjects: GameObject[] = [];
     _activeCamera?: GameObject
     collisionSystem : CollisionSystem = new CollisionSystem()
+
+    postProcessingOptions: PostProcessingOptions[] = []
+    
 
     public getBoundingBoxContaining(position: Vec3): Collider | null {
         return this.collisionSystem.getBoundingBoxContaining(position)

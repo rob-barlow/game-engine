@@ -1,6 +1,6 @@
 import { CanvasSize } from "../../../utils/types";
 
-class DarknessProgram {
+class PostProcessProgram {
     positionBuffer: WebGLBuffer
     textureCoordBuffer: WebGLBuffer
 
@@ -14,13 +14,16 @@ class DarknessProgram {
     gl: WebGLRenderingContext;
     size: CanvasSize;
     
-    constructor(gl : WebGLRenderingContext, size: CanvasSize, frameBufferTexture: WebGLTexture){
+    constructor(gl : WebGLRenderingContext, size: CanvasSize, fragmentShaderSource: string){
         this.gl = gl;
         this.size = size;
         this.gl.activeTexture(this.gl.TEXTURE0);
 
         const vertexShader = createShader(this.gl, this.gl.VERTEX_SHADER, regularVertexShaderSource) as WebGLShader;
+
         const fragmentShader = createShader(this.gl, this.gl.FRAGMENT_SHADER, fragmentShaderSource) as WebGLShader;
+
+
         this.program = createProgram(this.gl, vertexShader, fragmentShader) as WebGLProgram;
 
         this.gl.useProgram(this.program);
@@ -28,7 +31,6 @@ class DarknessProgram {
         // position buffer
         this.positionBuffer = this.gl.createBuffer();
         this.textureCoordBuffer = this.gl.createBuffer();
-
 
         this.positionAttributeLocation = this.gl.getAttribLocation(this.program, 'aVertexPosition');
         this.textureCoordAttributeLocation = this.gl.getAttribLocation(this.program, "aTextureCoord");
@@ -60,21 +62,13 @@ class DarknessProgram {
         this.gl.enableVertexAttribArray(this.textureCoordAttributeLocation);
         this.gl.vertexAttribPointer(this.textureCoordAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texVertices), this.gl.STATIC_DRAW);
-
-        this.gl.bindTexture(this.gl.TEXTURE_2D, frameBufferTexture);
-
-        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGB, this.size.width, this.size.height, 0, this.gl.RGB, this.gl.UNSIGNED_BYTE, null)
         
         this.screenTextureUniformLocation = this.gl.getUniformLocation(this.program, "uScreenTexture");
         this.gl.uniform1i(this.screenTextureUniformLocation, 0)
-
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
     }
 }
 
-export default DarknessProgram;
+export default PostProcessProgram;
 
 const regularVertexShaderSource = `
     attribute vec2 aVertexPosition;
@@ -87,54 +81,6 @@ const regularVertexShaderSource = `
         vTextureCoord = aTextureCoord;
     }
 `;
-
-const pixelationFragmentShaderSource = `
-    precision mediump float;
-
-    varying highp vec2 vTextureCoord;
-    uniform sampler2D uScreenTexture;
-
-    void main() {
-        vec2 pixelSize = vec2(2.0, 2.0); // Size of the pixelation effect
-        vec2 resolution = vec2(800.0, 600.0); // Resolution of the screen
-
-        vec2 normalizedPixelSize = pixelSize / resolution;
-        vec2 uvPixel = normalizedPixelSize * floor(vTextureCoord / normalizedPixelSize);
-
-        gl_FragColor = texture2D(uScreenTexture, uvPixel);
-    }
-`;
-
-const fogFragmentShaderSource = `
-    precision mediump float;
-
-    varying highp vec2 vTextureCoord;
-    uniform sampler2D uScreenTexture;
-
-    void main() {
-        vec2 pixelSize = vec2(2.0, 2.0); // Size of the pixelation effect
-        vec2 resolution = vec2(800.0, 600.0); // Resolution of the screen
-
-        vec2 normalizedPixelSize = pixelSize / resolution;
-        vec2 uvPixel = normalizedPixelSize * floor(vTextureCoord / normalizedPixelSize);
-
-        gl_FragColor = gl_FragCoord;
-    }
-`;
-
-const regularFragmentShaderSource = `
-    varying highp vec2 vTextureCoord;
-    uniform sampler2D uScreenTexture;
-
-    void main() {
-        gl_FragColor = texture2D(uScreenTexture, vTextureCoord);
-    }
-`;
-
-// const fragmentShaderSource = regularFragmentShaderSource;
-const fragmentShaderSource = pixelationFragmentShaderSource;
-// const fragmentShaderSource = fogFragmentShaderSource;
-
 
 function createShader(gl: WebGLRenderingContext, type: number, source: string) {
    const shader: WebGLShader = gl.createShader(type) as WebGLShader;

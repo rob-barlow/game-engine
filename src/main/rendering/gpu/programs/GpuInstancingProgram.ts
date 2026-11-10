@@ -110,7 +110,6 @@ class GpuInstancingProgram {
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.textureCoordBuffer);
         this.gl.enableVertexAttribArray(this.textureCoordAttributeLocation);
         this.gl.vertexAttribPointer(this.textureCoordAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
-        // this.ext.vertexAttribDivisorANGLE(this.textureCoordAttributeLocation, 1);
 
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), this.gl.STATIC_DRAW);
     }

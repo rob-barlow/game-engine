@@ -4,15 +4,19 @@ import { Matrix3, Transform, Vec3 } from "../../../maths/index";
 import Boundary from "../../game-objects/Boundary";
 import { Panel } from "../../game-objects/Panel";
 import { Scene } from "../../Scene";
-import { PanelDirection } from "../../../utils/types";
 import { addPlayer } from "../Extensions";
-import MazePanelTypes from "./MazePanelTypes";
+import { PostProcessingOptions } from "../../../rendering/gpu/PostProcessingOptions";
 
 export function createMazeScene(): {scene: Scene, controllers: Controller[]} {
     const mazeWidth = 10;
     const mazeHeight = 10;
 
     const scene = new Scene();
+    scene.postProcessingOptions = [
+        PostProcessingOptions.Pixelation,
+        // PostProcessingOptions.Grayscale,
+        // PostProcessingOptions.Kernel
+    ]
 
     const startPosition = addMaze(scene, mazeWidth, mazeHeight);
     

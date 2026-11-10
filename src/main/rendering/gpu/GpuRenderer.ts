@@ -3,8 +3,8 @@ import { Scene } from "../../scene/Scene";
 import { CanvasSize } from "../../utils/types";
 import { Renderer } from "../Renderer";
 import GeometryPass from "./passes/GeometryPass";
-import DarknessProgram from "./programs/DarknessProgram";
-import FrameBufferProgram from "./programs/FrameBufferProgram";
+import { PostProcessingOptions } from "./PostProcessingOptions";
+import PostProcessProgram from "./programs/PostProcessProgram";
 
 export class GpuRenderer implements Renderer {
     size: CanvasSize;
@@ -13,6 +13,8 @@ export class GpuRenderer implements Renderer {
     gl: WebGLRenderingContext;
 
     geometryPass: GeometryPass;
+
+    currentFrameBufferA: Boolean = true;
     
     renderBufferA: WebGLFramebuffer;
     frameBufferA: WebGLFramebuffer;
@@ -22,9 +24,10 @@ export class GpuRenderer implements Renderer {
     frameBufferB: WebGLFramebuffer;
     frameBufferTextureB: WebGLTexture;
 
-    frameBufferProgram: FrameBufferProgram;
-    darknessProgram: DarknessProgram;
-
+    pixelationProgram: PostProcessProgram;
+    grayscaleProgram: PostProcessProgram;
+    kernelProgram: PostProcessProgram;
+    frameBufferProgram: PostProcessProgram;
 
     constructor(assetManager: AssetManager){
         this.assetManager = assetManager;
@@ -39,6 +42,7 @@ export class GpuRenderer implements Renderer {
         };
 
         this.gl = canvas.getContext("webgl") as WebGLRenderingContext;
+        console.log("version: "+ this.gl.getParameter(this.gl.SHADING_LANGUAGE_VERSION))
         
         this.geometryPass = new GeometryPass(this.gl, this.size, this.assetManager);
         
@@ -62,8 +66,10 @@ export class GpuRenderer implements Renderer {
         this.frameBufferB = frameBufferB;
         this.renderBufferB = renderBufferB;
 
-        this.frameBufferProgram = new FrameBufferProgram(this.gl, this.size);
-        this.darknessProgram = new DarknessProgram(this.gl, this.size, this.frameBufferTextureA);
+        this.pixelationProgram = new PostProcessProgram(this.gl, this.size, pixelationFragmentShaderSource);
+        this.grayscaleProgram = new PostProcessProgram(this.gl, this.size, grayscaleFragmentShaderSource);
+        this.kernelProgram = new PostProcessProgram(this.gl, this.size, kernelFragmentShaderSource);
+        this.frameBufferProgram = new PostProcessProgram(this.gl, this.size, regularFragmentShaderSource);
 
         // face culling
         this.gl.enable(this.gl.CULL_FACE);
@@ -81,11 +87,14 @@ export class GpuRenderer implements Renderer {
         if (this.gl.checkFramebufferStatus(this.gl.FRAMEBUFFER) != this.gl.FRAMEBUFFER_COMPLETE) {
             console.log("SHIT")
         }
+
     }
 
     public render(scene: Scene) {
         // SET UP
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.frameBufferA);
+        this.currentFrameBufferA = true;
+
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         this.gl.enable(this.gl.DEPTH_TEST)
         
@@ -94,17 +103,30 @@ export class GpuRenderer implements Renderer {
 
         this.gl.disable(this.gl.DEPTH_TEST)
         this.gl.activeTexture(this.gl.TEXTURE0);
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.frameBufferTextureA);
 
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.frameBufferB);
+        this.swapFrameTextureBuffer();
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
         
-        // DARKNESS PASS
-        this.pixelationPass();
+        // GRAYSCALE PASS
+        if (scene.postProcessingOptions.includes(PostProcessingOptions.Grayscale)){
+            this.runPostProcess(this.grayscaleProgram);
+            this.swapFrameTextureBuffer();
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+        }
 
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.frameBufferTextureB);
+        // PIXELATION PASS
+        if (scene.postProcessingOptions.includes(PostProcessingOptions.Pixelation)){
+            this.runPostProcess(this.pixelationProgram);
+            this.swapFrameTextureBuffer();
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+        }
 
-        // STAR PASS
+        // KERNEL PASS
+        if (scene.postProcessingOptions.includes(PostProcessingOptions.Kernel)){
+            this.runPostProcess(this.pixelationProgram);
+            this.swapFrameTextureBuffer();
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+        }
 
         // PRESENT PASS
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
@@ -112,18 +134,31 @@ export class GpuRenderer implements Renderer {
         this.present();
     }
 
-    pixelationPass(){
-        this.gl.useProgram(this.darknessProgram.program);
+    runPostProcess(program){
+        this.gl.useProgram(program.program);
 
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.darknessProgram.positionBuffer);
-        this.gl.enableVertexAttribArray(this.darknessProgram.positionAttributeLocation);
-        this.gl.vertexAttribPointer(this.darknessProgram.positionAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, program.positionBuffer);
+        this.gl.enableVertexAttribArray(program.positionAttributeLocation);
+        this.gl.vertexAttribPointer(program.positionAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
 
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.darknessProgram.textureCoordBuffer);
-        this.gl.enableVertexAttribArray(this.darknessProgram.textureCoordAttributeLocation);
-        this.gl.vertexAttribPointer(this.darknessProgram.textureCoordAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, program.textureCoordBuffer);
+        this.gl.enableVertexAttribArray(program.textureCoordAttributeLocation);
+        this.gl.vertexAttribPointer(program.textureCoordAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
 
         this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
+    }
+
+    swapFrameTextureBuffer(){
+        if (this.currentFrameBufferA){
+            this.gl.bindTexture(this.gl.TEXTURE_2D, this.frameBufferTextureA);
+            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.frameBufferB);
+        }
+        else {
+            this.gl.bindTexture(this.gl.TEXTURE_2D, this.frameBufferTextureB);
+            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.frameBufferA);
+        }
+
+        this.currentFrameBufferA = !this.currentFrameBufferA;
     }
 
     present(){
@@ -195,4 +230,98 @@ export class GpuRenderer implements Renderer {
 //     // 6. Present to screen
 //     this.present();
 // }
+
+const regularFragmentShaderSource = `
+    varying highp vec2 vTextureCoord;
+    uniform sampler2D uScreenTexture;
+
+    void main() {
+        gl_FragColor = texture2D(uScreenTexture, vTextureCoord);
+    }
+`;
     
+const pixelationFragmentShaderSource = `
+    precision mediump float;
+
+    varying highp vec2 vTextureCoord;
+    uniform sampler2D uScreenTexture;
+
+    void main() {
+        vec2 pixelSize = vec2(2.0, 2.0); // Size of the pixelation effect
+        vec2 resolution = vec2(800.0, 600.0); // Resolution of the screen
+
+        vec2 normalizedPixelSize = pixelSize / resolution;
+        vec2 uvPixel = normalizedPixelSize * floor(vTextureCoord / normalizedPixelSize);
+
+        gl_FragColor = texture2D(uScreenTexture, uvPixel);
+    }
+`;
+
+const grayscaleFragmentShaderSource = `
+    precision mediump float;
+
+    varying highp vec2 vTextureCoord;
+    uniform sampler2D uScreenTexture;
+
+    void main()
+    {
+        gl_FragColor = texture2D(uScreenTexture, vTextureCoord);
+        float average = 0.2126 * gl_FragColor.r + 0.7152 * gl_FragColor.g + 0.0722 * gl_FragColor.b;
+        gl_FragColor = vec4(average, average, average, 1.0);
+    }   
+`;
+
+const fogFragmentShaderSource = ``;
+
+const kernelFragmentShaderSource = `precision mediump float;
+
+varying highp vec2 vTextureCoord;
+uniform sampler2D uScreenTexture;
+
+const float offset = 1.0 / 300.0;
+
+void main()
+{
+    vec2 offsets[9];
+
+    offsets[0] = vec2(-offset,  offset);
+    offsets[1] = vec2( 0.0,     offset);
+    offsets[2] = vec2( offset,  offset);
+    offsets[3] = vec2(-offset,  0.0);
+    offsets[4] = vec2( 0.0,     0.0);
+    offsets[5] = vec2( offset,  0.0);
+    offsets[6] = vec2(-offset, -offset);
+    offsets[7] = vec2( 0.0,    -offset);
+    offsets[8] = vec2( offset, -offset);
+
+    float kernel[9];
+
+    kernel[0] = -1.0;
+    kernel[1] = -1.0;
+    kernel[2] = -1.0;
+    kernel[3] = -1.0;
+    kernel[4] =  9.0;
+    kernel[5] = -1.0;
+    kernel[6] = -1.0;
+    kernel[7] = -1.0;
+    kernel[8] = -1.0;
+
+    vec3 sampleTex[9];
+
+    for (int i = 0; i < 9; i++)
+    {
+        sampleTex[i] = texture2D(
+            uScreenTexture,
+            vTextureCoord + offsets[i]
+        ).rgb;
+    }
+
+    vec3 col = vec3(0.0);
+
+    for (int i = 0; i < 9; i++)
+    {
+        col += sampleTex[i] * kernel[i];
+    }
+
+    gl_FragColor = vec4(col, 1.0);
+}`;
