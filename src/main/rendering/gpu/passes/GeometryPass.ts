@@ -25,6 +25,7 @@ export default class GeometryPass implements Pass {
 
     wallTexture: WebGLTexture;
     waterTexture: WebGLTexture;
+    plainTexture: WebGLTexture;
 
     textures: Map<string, WebGLTexture>
 
@@ -46,7 +47,6 @@ export default class GeometryPass implements Pass {
         this.gpuInstancingProgram.ext.vertexAttribDivisorANGLE(this.gpuInstancingProgram.colourAttributeLocation, 0);
 
         this.loadTextures();
-
     }
 
     public render(scene: Scene) {
@@ -103,12 +103,21 @@ export default class GeometryPass implements Pass {
 
         this.gl.useProgram(this.gpuInstancingProgram.program);
         
-        this.gl.activeTexture(this.gl.TEXTURE0);
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.waterTexture)
-        
-        this.gl.activeTexture(this.gl.TEXTURE1);
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.wallTexture)
-        
+        if (batch[0].texture){
+            this.gl.activeTexture(this.gl.TEXTURE0);
+            this.gl.bindTexture(this.gl.TEXTURE_2D, this.waterTexture)
+            
+            this.gl.activeTexture(this.gl.TEXTURE1);
+            this.gl.bindTexture(this.gl.TEXTURE_2D, this.wallTexture)
+        }
+        else {
+            this.gl.activeTexture(this.gl.TEXTURE0);
+            this.gl.bindTexture(this.gl.TEXTURE_2D, this.plainTexture)
+            
+            this.gl.activeTexture(this.gl.TEXTURE1);
+            this.gl.bindTexture(this.gl.TEXTURE_2D, this.plainTexture)
+        }
+
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.positionBuffer);
         this.gl.vertexAttribPointer(this.gpuInstancingProgram.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
 
@@ -349,6 +358,31 @@ export default class GeometryPass implements Pass {
 
         this.gl.uniform1i(this.gl.getUniformLocation(this.gpuInstancingProgram.program, "uWaterTexture"), 0)
         this.gl.uniform1i(this.gl.getUniformLocation(this.gpuInstancingProgram.program, "uBrickTexture"), 1)
+
+        
+        // Plain texture stuff
+        this.plainTexture = this.gl.createTexture();
+        this.gl.bindTexture(this.gl.TEXTURE_2D,  this.plainTexture);
+
+        const level = 0;
+        const internalFormat = this.gl.RGBA;
+        const width = 1;
+        const height = 1;
+        const border = 0;
+        const srcFormat = this.gl.RGBA;
+        const srcType = this.gl.UNSIGNED_BYTE;
+        const pixel = new Uint8Array([255, 255, 255, 255]);
+        this.gl.texImage2D(
+            this.gl.TEXTURE_2D,
+            level,
+            internalFormat,
+            width,
+            height,
+            border,
+            srcFormat,
+            srcType,
+            pixel,
+        );
     }
 
     isPowerOf2(value: number) {

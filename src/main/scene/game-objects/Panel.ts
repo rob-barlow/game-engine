@@ -18,4 +18,6 @@ export class Panel extends GameObject {
         super(transform);
         this.mesh = new Mesh(panelVertices, colour);
     }
+
+    texture = "wall";
 }

@@ -7,7 +7,7 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "vite --host",
+    "dev": "npx wrangler dev --ip 0.0.0.0",
     "build": "vite build --mode debug",
     "preview": "vite preview",
     "test": "vitest run"
