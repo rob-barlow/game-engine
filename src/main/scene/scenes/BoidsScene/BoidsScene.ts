@@ -8,7 +8,7 @@ import Drone from "../../game-objects/Drone";
 import { IndividualBoidController } from "./controllers/IndividualBoidController";
 import { BoidXBound, BoidZBound } from "../../../utils/constants";
 
-const boidCubeRoot = 30;
+const boidCubeRoot = 50;
 const posScale = 0.5;
 
 export function createBoidsScene(): {scene: Scene, controllers: Controller[]} {
@@ -16,7 +16,6 @@ export function createBoidsScene(): {scene: Scene, controllers: Controller[]} {
 
     const playerTransform: Transform = {
         position: {x: BoidXBound/2, y: 15, z: BoidZBound/2},
-        // position: {x: (boidCubeRoot - 1) * posScale * 0.5, y: 4, z: (boidCubeRoot - 1) * posScale * 0.5},
         orientation: Matrix3.getRotationMatrix('x', Math.PI/2),
         scale: {x: 1, y: 1, z: 1}
     }

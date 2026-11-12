@@ -1,4 +1,4 @@
-import { Matrix3, Vec3 } from "../../../../maths";
+import { Matrix3, Vec2, Vec3 } from "../../../../maths";
 import { Intent } from "../../../../maths/Intent";
 import { BoidXBound, BoidZBound } from "../../../../utils/constants";
 import { Panel } from "../../../game-objects/Panel";
@@ -42,32 +42,45 @@ export class BoidsMasterController {
         // Coherence
         const boids = this.controllers.map(controller => controller.targets[0])
 
+        const grid = new Map<string, Boid[]>();
+        const cellSize = visualRange;
+
+        for (let i = 0; i < this.controllers.length; i++){
+            const boid = boids[i]
+            const gridKey = `${Math.floor(boid.transform.position.x / cellSize)},${Math.floor(boid.transform.position.y / cellSize)},${Math.floor(boid.transform.position.z / cellSize)}`
+            if (!grid.has(gridKey))
+                 grid.set(gridKey, [])
+
+            grid.get(gridKey).push(boid);
+        }
+
         for (let i = 0; i < this.controllers.length; i++){
             const boid = boids[i]
             const forward = Vec3.normalise(Matrix3.apply(boid.transform.orientation, {x: 0, y: 0, z: 1}));
 
-            const neighbours = boids
-            .map(other => {
-                const offset = Vec3.subtract(
-                    other.transform.position,
-                    boid.transform.position
-                );
+            const neighbours: {boid: Boid, offset: Vec3, distance: number}[] = []
+            for (let dz = -1; dz <= 1; dz++) {
+                for (let dx = -1; dx <= 1; dx++) {
 
-                const distance = Vec3.magnitude(offset)
-                if ( distance > visualRange || distance == 0) return null
-                return {
-                    boid: other,
-                    offset,
-                    distance: distance,
-                };
-            })
-            .filter(a => a != null);
+                    const key = `${Math.floor(boid.transform.position.x / cellSize) + dx},${Math.floor(boid.transform.position.y / cellSize)},${Math.floor(boid.transform.position.z / cellSize) + dz}`;
 
-            if (neighbours.length == 0) {
-                this.intents[i].yaw = 0;
-                continue;
+                    const cellBoids = grid.get(key);
+
+                    if (!cellBoids) continue;
+
+                    for (const other of cellBoids) {
+                        const offset = Vec3.subtract(other.transform.position, boid.transform.position);
+                        const distance = Vec3.magnitude(offset)
+                        if ( distance < visualRange && distance != 0)
+                            neighbours.push({
+                                boid: other,
+                                offset,
+                                distance: distance,
+                            });
+                    }
+                }
             }
-
+            
             // Coherence 
             let center = boid.transform.position;
             let coherenceAngle = 0;
@@ -113,10 +126,10 @@ export class BoidsMasterController {
             let desired = {x:0,y:0,z:0};
 
             if (boid.transform.position.x < 0) desired.x += 1;
-            if (boid.transform.position.x > BoidXBound) desired.x -= 1;
+            else if (boid.transform.position.x > BoidXBound) desired.x -= 1;
 
             if (boid.transform.position.z < 0) desired.z += 1;
-            if (boid.transform.position.z > BoidZBound) desired.z -= 1;
+            else if (boid.transform.position.z > BoidZBound) desired.z -= 1;
 
             if (desired.x != 0 || desired.z != 0) {
                 const dot = Vec3.dot(forward, desired);
@@ -140,7 +153,7 @@ export class BoidsMasterController {
 const coherenceWeight = 0.2;
 const separationWeight = 0.5;
 const alignmentWeight = 2;
-const boundsWeight = 5;
+const boundsWeight = 10;
 
 const visualRange = 2;
 
