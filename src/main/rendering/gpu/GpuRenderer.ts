@@ -168,12 +168,31 @@ export class GpuRenderer implements Renderer {
         this.gl.enableVertexAttribArray(this.frameBufferProgram.positionAttributeLocation);
         this.gl.vertexAttribPointer(this.frameBufferProgram.positionAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
 
+        const screenVertices = [
+            -1,-1,
+            -1,1,
+            1,1,
+            -1,-1,
+            1,1,
+            1,-1
+        ]
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(screenVertices), this.gl.STATIC_DRAW)
+
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.frameBufferProgram.textureCoordBuffer);
         this.gl.enableVertexAttribArray(this.frameBufferProgram.textureCoordAttributeLocation);
         this.gl.vertexAttribPointer(this.frameBufferProgram.textureCoordAttributeLocation, 2, this.gl.FLOAT, false, 0, 0);
 
+        const texVertices = [
+            0,0,
+            0,1,
+            1,1,
+            0,0,
+            1,1,
+            1,0
+        ]
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texVertices), this.gl.STATIC_DRAW);
 
-        this.gl.drawArrays(this.gl.TRIANGLES, 0, 12);
+        this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
     }
 
     resize(){

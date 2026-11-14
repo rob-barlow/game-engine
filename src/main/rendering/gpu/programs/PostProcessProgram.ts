@@ -44,7 +44,7 @@ class PostProcessProgram {
             1,-1
         ]
 
-         const texVertices = [
+        const texVertices = [
             0,0,
             0,1,
             1,1,

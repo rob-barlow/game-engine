@@ -8,7 +8,7 @@ import Drone from "../../game-objects/Drone";
 import { IndividualBoidController } from "./controllers/IndividualBoidController";
 import { BoidXBound, BoidZBound } from "../../../utils/constants";
 
-const boidCubeRoot = 50;
+const boidCubeRoot = 30;
 const posScale = 0.5;
 
 export function createBoidsScene(): {scene: Scene, controllers: Controller[]} {

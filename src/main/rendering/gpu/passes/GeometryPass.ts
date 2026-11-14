@@ -13,7 +13,7 @@ import { CanvasSize } from "../../../utils/types";
 import AssetManager from "../../../app/AssetManager";
 import { Boid } from "../../../scene/scenes/BoidsScene/game-objects/Boid";
 
-const gpuInstancingBoundary = 5;
+const gpuInstancingBoundary = 9;
 
 export default class GeometryPass implements Pass {
     size: CanvasSize;
@@ -174,7 +174,7 @@ export default class GeometryPass implements Pass {
         this.gpuInstancingProgram.ext.drawArraysInstancedANGLE(
             this.gl.TRIANGLES,
             0,             // offset
-            meshVertices.length,   // num vertices per instance
+            meshVertices.length / 3,   // num vertices per instance
             worldMatrices.length,  // num instances
         );
 
@@ -286,19 +286,19 @@ export default class GeometryPass implements Pass {
         
         for (const gameObj of batch){
             const worldMatrix = Transform.getWorldMatrix(gameObj.transform)
-            this.gl.uniform3fv(this.regularProgram.colourUniformLocation, gameObj.mesh.colour.map(v => v/255));
+            this.gl.uniform3fv(this.regularProgram.colourUniformLocation, gameObj.mesh!.colour.map(v => v/255));
             this.gl.uniformMatrix4fv(this.regularProgram.worldMatrixUniformLocation, false, Matrix4.toGlslArray(worldMatrix))
             
-            for (const triangle of gameObj.mesh.triangles){
+            for (const triangle of gameObj.mesh!.triangles){
                 for (const vertex of triangle){
                     vertices.push(vertex.x, vertex.y, vertex.z)
                 }
             }
+            
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.DYNAMIC_DRAW)
+            this.gl.drawArrays(this.gl.TRIANGLES, 0, vertices.length/3)
+            vertices.length = 0;
         }
-
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW)
-
-        this.gl.drawArrays(this.gl.TRIANGLES, 0, vertices.length)
     }
     
     loadTexture(url: string) {
