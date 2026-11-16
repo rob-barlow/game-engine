@@ -1,5 +1,6 @@
 export enum PostProcessingOptions {
     Pixelation,
     Grayscale,
-    Kernel
+    Kernel,
+    Flashlight
 }

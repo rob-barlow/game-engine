@@ -27,6 +27,7 @@ export class GpuRenderer implements Renderer {
     pixelationProgram: PostProcessProgram;
     grayscaleProgram: PostProcessProgram;
     kernelProgram: PostProcessProgram;
+    flashlightProgram: PostProcessProgram;
     frameBufferProgram: PostProcessProgram;
 
     constructor(assetManager: AssetManager){
@@ -69,6 +70,7 @@ export class GpuRenderer implements Renderer {
         this.pixelationProgram = new PostProcessProgram(this.gl, this.size, pixelationFragmentShaderSource);
         this.grayscaleProgram = new PostProcessProgram(this.gl, this.size, grayscaleFragmentShaderSource);
         this.kernelProgram = new PostProcessProgram(this.gl, this.size, kernelFragmentShaderSource);
+        this.flashlightProgram = new PostProcessProgram(this.gl, this.size, flashlightFragmentShaderSource);
         this.frameBufferProgram = new PostProcessProgram(this.gl, this.size, regularFragmentShaderSource);
 
         // face culling
@@ -107,6 +109,13 @@ export class GpuRenderer implements Renderer {
         this.swapFrameTextureBuffer();
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);
         
+        // FLASHLIGHT PASS
+        if (scene.postProcessingOptions.includes(PostProcessingOptions.Flashlight)){
+            this.runPostProcess(this.flashlightProgram);
+            this.swapFrameTextureBuffer();
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+        }
+
         // GRAYSCALE PASS
         if (scene.postProcessingOptions.includes(PostProcessingOptions.Grayscale)){
             this.runPostProcess(this.grayscaleProgram);
@@ -325,3 +334,23 @@ void main()
 
     gl_FragColor = vec4(col, 1.0);
 }`;
+
+const flashlightFragmentShaderSource = `
+    precision mediump float;
+
+    varying highp vec2 vTextureCoord;
+    uniform sampler2D uScreenTexture;
+
+    void main()
+    {
+        vec2 uv=gl_FragCoord.xy/u_resolution;
+        float distanceFromCenter = sqrt((0.5 - uv.x) * (0.5 - uv.x) + (0.5 - uv.y) * (0.5 - uv.y));
+        if (distanceFromCenter < 0.2){
+            vec4 mixColour =  vec4(1.0,1.0,1.0,1.0);
+            gl_FragColor = mix(texture2D(uScreenTexture, vTextureCoord), mixColour, 1.0 - (5.0 * distanceFromCenter));    
+        }
+        else {
+            gl_FragColor = mix(texture2D(uScreenTexture, vTextureCoord), vec4(0,0,0,1), distanceFromCenter * 2.0);
+        }
+    }   
+`;

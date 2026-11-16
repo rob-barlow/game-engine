@@ -13,8 +13,9 @@ export function createMazeScene(): {scene: Scene, controllers: Controller[]} {
 
     const scene = new Scene();
     scene.postProcessingOptions = [
+        PostProcessingOptions.Flashlight,
         // PostProcessingOptions.Pixelation,
-        // PostProcessingOptions.Grayscale,
+        PostProcessingOptions.Grayscale,
         // PostProcessingOptions.Kernel
     ]
 

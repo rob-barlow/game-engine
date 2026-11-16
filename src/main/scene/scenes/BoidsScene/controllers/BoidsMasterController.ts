@@ -1,14 +1,12 @@
 import { Matrix3, Vec2, Vec3 } from "../../../../maths";
 import { Intent } from "../../../../maths/Intent";
 import { BoidXBound, BoidZBound } from "../../../../utils/constants";
-import { Panel } from "../../../game-objects/Panel";
 import { Boid } from "../game-objects/Boid";
 import { IndividualBoidController } from "./IndividualBoidController";
 
-const coherence = 1;
-
 export class BoidsMasterController {
     controllers: IndividualBoidController[] = []
+    boids: Boid[] = []
     intents: Intent[] = []
     setControllers(controllers: IndividualBoidController[]) {
         this.controllers = controllers;
@@ -25,6 +23,8 @@ export class BoidsMasterController {
                 roll: 0
             };
         }
+
+        this.boids = this.controllers.map(controller => controller.targets[0])
     }
 
     getIntent(controller: IndividualBoidController){
@@ -40,7 +40,8 @@ export class BoidsMasterController {
 
     updateIntents() {
         // Coherence
-        const boids = this.controllers.map(controller => controller.targets[0])
+        const boids = this.boids;
+        const forwards = boids.map(boid => Vec3.normalise(Matrix3.apply(boid.transform.orientation, {x: 0, y: 0, z: 1})))
 
         const grid = new Map<string, Boid[]>();
         const cellSize = visualRange;
@@ -56,9 +57,9 @@ export class BoidsMasterController {
 
         for (let i = 0; i < this.controllers.length; i++){
             const boid = boids[i]
-            const forward = Vec3.normalise(Matrix3.apply(boid.transform.orientation, {x: 0, y: 0, z: 1}));
+            const forward = forwards[i]
 
-            const neighbours: {boid: Boid, offset: Vec3, distance: number}[] = []
+            const neighbours: {boid: Boid, offset: Vec3, distanceSqrd: number}[] = []
             for (let dz = -1; dz <= 1; dz++) {
                 for (let dx = -1; dx <= 1; dx++) {
 
@@ -70,12 +71,12 @@ export class BoidsMasterController {
 
                     for (const other of cellBoids) {
                         const offset = Vec3.subtract(other.transform.position, boid.transform.position);
-                        const distance = Vec3.magnitude(offset)
-                        if ( distance < visualRange && distance != 0)
+                        const distanceSqrd = Vec3.dot(offset, offset)
+                        if ( distanceSqrd < visualRange * visualRange && distanceSqrd != 0)
                             neighbours.push({
                                 boid: other,
                                 offset,
-                                distance: distance,
+                                distanceSqrd: distanceSqrd,
                             });
                     }
                 }
@@ -97,16 +98,16 @@ export class BoidsMasterController {
 
                 const separationCross = Vec3.cross(forward, separationToTarget);
 
-                separationAngle -= (1/neighbour.distance) * Math.atan2(separationCross.y, separationDot);
+                separationAngle -= (1/neighbour.distanceSqrd) * Math.atan2(separationCross.y, separationDot);
             
                 // Alignment
-                const otherForward = Vec3.normalise(Matrix3.apply(neighbour.boid.transform.orientation, {x: 0, y: 0, z: 1}));
+                const otherForward = forwards[boids.indexOf(neighbour.boid)]
 
                 const alignmentDot = Vec3.dot(forward, otherForward);
 
                 const alignmentCross = Vec3.cross(forward, otherForward);
 
-                alignmentAngle += (1/neighbour.distance) * Math.atan2(alignmentCross.y, alignmentDot);
+                alignmentAngle += (1/neighbour.distanceSqrd) * Math.atan2(alignmentCross.y, alignmentDot);
             })
 
             if (neighbours.length > 0){
@@ -150,10 +151,9 @@ export class BoidsMasterController {
     }
 }
 
-const coherenceWeight = 0.2;
+const coherenceWeight = 0.5;
 const separationWeight = 0.5;
 const alignmentWeight = 2;
 const boundsWeight = 10;
 
-const visualRange = 2;
-
+const visualRange = BoidXBound / 20;
