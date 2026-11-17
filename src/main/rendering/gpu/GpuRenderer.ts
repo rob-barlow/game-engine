@@ -4,7 +4,8 @@ import { CanvasSize } from "../../utils/types";
 import { Renderer } from "../Renderer";
 import GeometryPass from "./passes/GeometryPass";
 import { PostProcessingOptions } from "./PostProcessingOptions";
-import PostProcessProgram from "./programs/PostProcessProgram";
+import FlashlightProgram from "./programs/post-processing/FlashlightProgram";
+import PostProcessProgram from "./programs/post-processing/PostProcessProgram";
 
 export class GpuRenderer implements Renderer {
     size: CanvasSize;
@@ -27,7 +28,7 @@ export class GpuRenderer implements Renderer {
     pixelationProgram: PostProcessProgram;
     grayscaleProgram: PostProcessProgram;
     kernelProgram: PostProcessProgram;
-    flashlightProgram: PostProcessProgram;
+    flashlightProgram: FlashlightProgram;
     frameBufferProgram: PostProcessProgram;
 
     constructor(assetManager: AssetManager){
@@ -70,8 +71,9 @@ export class GpuRenderer implements Renderer {
         this.pixelationProgram = new PostProcessProgram(this.gl, this.size, pixelationFragmentShaderSource);
         this.grayscaleProgram = new PostProcessProgram(this.gl, this.size, grayscaleFragmentShaderSource);
         this.kernelProgram = new PostProcessProgram(this.gl, this.size, kernelFragmentShaderSource);
-        this.flashlightProgram = new PostProcessProgram(this.gl, this.size, flashlightFragmentShaderSource);
         this.frameBufferProgram = new PostProcessProgram(this.gl, this.size, regularFragmentShaderSource);
+        
+        this.flashlightProgram = new FlashlightProgram(this.gl, this.size);
 
         // face culling
         this.gl.enable(this.gl.CULL_FACE);
@@ -354,22 +356,22 @@ void main()
     gl_FragColor = vec4(col, 1.0);
 }`;
 
-const flashlightFragmentShaderSource = `
-    precision mediump float;
+// const flashlightFragmentShaderSource = `
+//     precision mediump float;
 
-    varying highp vec2 vTextureCoord;
-    uniform sampler2D uScreenTexture;
+//     varying highp vec2 vTextureCoord;
+//     uniform sampler2D uScreenTexture;
 
-    void main()
-    {
-        vec2 uv=gl_FragCoord.xy/u_resolution;
-        float distanceFromCenter = sqrt((0.5 - uv.x) * (0.5 - uv.x) + (0.5 - uv.y) * (0.5 - uv.y));
-        if (distanceFromCenter < 0.2){
-            vec4 mixColour =  vec4(1.0,1.0,1.0,1.0);
-            gl_FragColor = mix(texture2D(uScreenTexture, vTextureCoord), mixColour, 1.0 - (5.0 * distanceFromCenter));    
-        }
-        else {
-            gl_FragColor = mix(texture2D(uScreenTexture, vTextureCoord), vec4(0,0,0,1), distanceFromCenter * 2.0);
-        }
-    }   
-`;
+//     void main()
+//     {
+//         vec2 uv=gl_FragCoord.xy/u_resolution;
+//         float distanceFromCenter = sqrt((0.5 - uv.x) * (0.5 - uv.x) + (0.5 - uv.y) * (0.5 - uv.y));
+//         if (distanceFromCenter < 0.2){
+//             vec4 mixColour =  vec4(1.0,1.0,1.0,1.0);
+//             gl_FragColor = mix(texture2D(uScreenTexture, vTextureCoord), mixColour, 1.0 - (5.0 * distanceFromCenter));    
+//         }
+//         else {
+//             gl_FragColor = mix(texture2D(uScreenTexture, vTextureCoord), vec4(0,0,0,1), distanceFromCenter * 2.0);
+//         }
+//     }   
+// `;

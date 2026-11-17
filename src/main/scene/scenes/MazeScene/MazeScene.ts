@@ -14,7 +14,7 @@ export function createMazeScene(): {scene: Scene, controllers: Controller[]} {
     const scene = new Scene();
     scene.postProcessingOptions = [
         PostProcessingOptions.Flashlight,
-        // PostProcessingOptions.Pixelation,
+        PostProcessingOptions.Pixelation,
         PostProcessingOptions.Grayscale,
         // PostProcessingOptions.Kernel
     ]
@@ -47,59 +47,6 @@ const frontWallScale: Vec3 = {x: 2, y: 4, z: 1}
 
 const backWallOrientation: Matrix3 = minusZOrientation
 const backWallScale: Vec3 = {x: 2, y: 4, z: 1}
-
-
-// switch (direction) {
-//         case 'X':
-//             normal.x = 1
-//             break;
-//         case '-X':
-//             normal.x = -1
-//             break;
-//         case 'Y':
-//             normal.y = 1
-//             break;
-//         case '-Y':
-//             normal.y = -1
-//             break;
-//         case 'Z':
-//             normal.z = 1
-//             break;
-//         case '-Z':
-//             normal.z = -1
-//             break;
-//     }
-
-//  const xNormal = {x: 1, y: 0, z: 0}
-//         const xNegNormal = {x: -1, y: 0, z: 0}
-//         const yNegNormal = {x: 0, y: -1, z: 0}
-//         const zNormal = {x: 0, y: 0, z: 1}
-//         const zNegNormal = {x: 0, y: 0, z: -1}
-
-//         let orientation: Matrix3 = Matrix3.identity()
-//         let positionOffset: Vec3 = {x: 0, y: 0, z: 0}
-
-//         if (Vec3.equals(normal, xNormal)){
-//         }
-//         else if (Vec3.equals(normal, xNegNormal)){
-//             positionOffset.z = 1
-//         }
-//         else if (Vec3.equals(normal, yNegNormal)){
-//             orientation = Matrix3.multiply(Matrix3.getRotationMatrix('z', Math.PI), Matrix3.identity())
-//             positionOffset.x = 1
-//         }
-//         else if (Vec3.equals(normal, zNormal)){
-//             orientation = Matrix3.multiply(Matrix3.getRotationMatrix('y', Math.PI), minusZOrientation)
-//             positionOffset.x = 1
-//         }
-//         else if (Vec3.equals(normal, zNegNormal)){
-//             orientation = minusZOrientation
-//         }
-
-
-
-
-
 
 function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
     const {seed, maze} = generateMaze(mazeWidth, mazeHeight);

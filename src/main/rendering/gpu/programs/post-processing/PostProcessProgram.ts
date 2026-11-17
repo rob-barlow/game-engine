@@ -1,4 +1,4 @@
-import { CanvasSize } from "../../../utils/types";
+import { CanvasSize } from "../../../../utils/types";
 
 class PostProcessProgram {
     positionBuffer: WebGLBuffer
