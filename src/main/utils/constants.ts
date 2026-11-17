@@ -14,5 +14,5 @@ export const viewportTop = 0;
 
 export const BoidSpeed = 7;
 export const BoidRotationSpeed = 2;
-export const BoidXBound = 20;
-export const BoidZBound = 15;
+export const BoidXBound = 80;
+export const BoidZBound = 60;

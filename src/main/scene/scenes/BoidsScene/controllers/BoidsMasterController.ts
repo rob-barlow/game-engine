@@ -1,5 +1,5 @@
 import { Updatable } from "../../../../app/Updatable";
-import { Matrix3, Vec2, Vec3 } from "../../../../maths";
+import { Matrix3, Vec3 } from "../../../../maths";
 import { BoidXBound, BoidZBound } from "../../../../utils/constants";
 import { Boid } from "../game-objects/Boid";
 import { IndividualBoidController } from "./IndividualBoidController";
@@ -14,7 +14,7 @@ export class BoidsMasterController implements Updatable {
     }
 
     update(dt: number) {
-        // Coherence
+        const controllers = this.controllers;
         const boids = this.boids;
         const forwards = boids.map(boid => Vec3.normalise(Matrix3.apply(boid.transform.orientation, {x: 0, y: 0, z: 1})))
 
@@ -22,7 +22,7 @@ export class BoidsMasterController implements Updatable {
         const cellSize = visualRange;
 
         // Store all boid indices in the grid
-        for (let i = 0; i < this.controllers.length; i++){
+        for (let i = 0; i < controllers.length; i++){
             const boid = boids[i]
             const gridKey = `${Math.floor(boid.transform.position.x / cellSize)},${Math.floor(boid.transform.position.y / cellSize)},${Math.floor(boid.transform.position.z / cellSize)}`
             if (!grid.has(gridKey))
@@ -31,7 +31,7 @@ export class BoidsMasterController implements Updatable {
             grid.get(gridKey).push(i);
         }
 
-        for (let i = 0; i < this.controllers.length; i++){
+        for (let i = 0; i < controllers.length; i++){
             const boid = boids[i]
             const forward = forwards[i]
 
@@ -59,15 +59,29 @@ export class BoidsMasterController implements Updatable {
                             center = Vec3.add(center, otherBoid.transform.position)
                             const distanceSqrdInverse = 1/distanceSqrd;
 
-                            // Separation
                             const separationToTarget = Vec3.scale(offset, distanceSqrdInverse)
                             
-                            separationAngle -= (distanceSqrdInverse) * getAngle(forward, separationToTarget); // 1
-                        
-                            // Alignment
+                            const separationCrossY = forward.z * separationToTarget.x - forward.x * separationToTarget.z
+
+                            if (Math.abs(separationCrossY) < EPS) {
+                                const dot = Vec3.dot(forward, separationToTarget)
+                                alignmentAngle -= dot < 0 ? distanceSqrdInverse * Math.PI : 0
+                            }
+                            else {
+                                alignmentAngle -= (distanceSqrdInverse) * separationCrossY * Math.PI
+                            }
+                            
                             const otherForward = forwards[otherBoidIndex]
 
-                            alignmentAngle += (distanceSqrdInverse) * getAngle(forward, otherForward) // 1
+                            const alignmentCrossY = forward.z * otherForward.x - forward.x * otherForward.z
+
+                            if (Math.abs(alignmentCrossY) < EPS) {
+                                const dot = Vec3.dot(forward, otherForward)
+                                alignmentAngle += dot < 0 ? distanceSqrdInverse * Math.PI : 0
+                            }
+                            else {
+                                alignmentAngle += (distanceSqrdInverse) * alignmentCrossY * Math.PI
+                            }
                             numOfNeighbours++;
                         }
                         
@@ -78,8 +92,16 @@ export class BoidsMasterController implements Updatable {
             if (numOfNeighbours > 0){
                 center = Vec3.scale(center, 1/(numOfNeighbours + 1))
                 const coherenceToTarget = Vec3.normalise(Vec3.subtract(center, boid.transform.position))
+                const coherenceCrossY = forward.z * coherenceToTarget.x - forward.x * coherenceToTarget.z
     
-                coherenceAngle += getAngle(forward, coherenceToTarget)
+                if (Math.abs(coherenceCrossY) < EPS) {
+                    const dot = Vec3.dot(forward, coherenceToTarget)
+                    coherenceAngle += dot < 0 ? Math.PI : 0
+                }
+                else {
+                    coherenceAngle += coherenceCrossY * Math.PI
+                }
+
                 alignmentAngle /= numOfNeighbours;
                 separationAngle /= numOfNeighbours;
             }
@@ -93,8 +115,22 @@ export class BoidsMasterController implements Updatable {
             if (boid.transform.position.z < 0) desired.z += 1;
             else if (boid.transform.position.z > BoidZBound) desired.z -= 1;
 
+            if (desired.x != 0 && desired.z != 0) {
+                desired.x = desired.x / Math.sqrt(2);
+                desired.z = desired.z / Math.sqrt(2);
+            }
+
             if (desired.x != 0 || desired.z != 0) {
-                boundsAngle += getAngle(forward, desired)
+                // Steer together
+                const crossY = forward.z * desired.x - forward.x * desired.z
+
+                if (Math.abs(crossY) < EPS) {
+                    const dot = Vec3.dot(forward, desired)
+                    boundsAngle = dot < 0 ? Math.PI : 0
+                }
+                else {
+                    boundsAngle = crossY * Math.PI
+                }
             }
 
             const a = coherenceAngle * coherenceWeight
@@ -103,23 +139,17 @@ export class BoidsMasterController implements Updatable {
             const d = boundsAngle * boundsWeight
 
             const correctYaw = Math.max(Math.min(a + b + c + d, Math.PI/2), -Math.PI/2);
-            this.controllers[i].intent.yaw = correctYaw * dt * dtCorrection;
+            controllers[i].intent.yaw = correctYaw * dt * dtCorrection;
         }
     }
 }
 
-const coherenceWeight = 0.5;
-const separationWeight = 0.5;
-const alignmentWeight = 2;
+const coherenceWeight = 1;
+const separationWeight = 0.3;
+const alignmentWeight = 1;
 const boundsWeight = 10;
 
-const dtCorrection = 100;
+const dtCorrection = 50;
 
-const visualRange = BoidXBound / 20;
-
-function getAngle(v1: Vec3, v2: Vec3){
-    // dot = dot(forward, desired);
-    // cross = cross(forward, desired);
-    // atan(cross.y, dot);
-    return Math.atan2(v1.z * v2.x - v1.x * v2.z, v1.x * v2.x + v1.y * v2.y + v1.z * v2.z);
-}
+const visualRange = BoidXBound / 40;
+const EPS = 0.001;

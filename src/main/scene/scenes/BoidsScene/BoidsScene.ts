@@ -9,14 +9,14 @@ import { IndividualBoidController } from "./controllers/IndividualBoidController
 import { BoidXBound, BoidZBound } from "../../../utils/constants";
 import { Updatable } from "../../../app/Updatable";
 
-const boidCubeRoot = 40;
+const boidCubeRoot = 50;
 const posScale = 0.5;
 
 export function createBoidsScene(): {scene: Scene, controllers: Controller[], updatables: Updatable[]} {
     const scene = new Scene();
 
     const playerTransform: Transform = {
-        position: {x: BoidXBound/2, y: 15, z: BoidZBound/2},
+        position: {x: BoidXBound/2, y: BoidXBound/3, z: BoidZBound/2},
         orientation: Matrix3.getRotationMatrix('x', Math.PI/2),
         scale: {x: 1, y: 1, z: 1}
     }
@@ -34,8 +34,8 @@ export function createBoidsScene(): {scene: Scene, controllers: Controller[], up
     for (let x = 0; x < boidCubeRoot; x++){
         for (let z = 0; z < boidCubeRoot; z++){
                 const cubeTransform: Transform = {
-                    position: {x: posScale * x * Math.random(), y: 2, z: posScale * z * Math.random()},
-                        orientation: Matrix3.identity(),
+                    position: {x: posScale * x * Math.random(), y: 0, z: posScale * z * Math.random()},
+                        orientation: Matrix3.getRotationMatrix('y', Math.random() * 2 * Math.PI),
                         scale: {x: 0.1, y: 0.1, z: 0.1},
                     }
                     
@@ -47,15 +47,6 @@ export function createBoidsScene(): {scene: Scene, controllers: Controller[], up
     }
 
     masterController.setControllers(controllers);
-
-    // const panelTransform: Transform = {
-    //     position: {x: 0, y: 0, z: 0},
-    //     orientation: Matrix3.identity(),
-    //     scale: {x: 0.1, y: 0.1, z: 0.1},
-    // }
-    // const centralPanel = new Panel(panelTransform, [0,255,0])
-    // scene.add(centralPanel);
-    // masterController.setCentralPanel(centralPanel)
 
     return {scene: scene, controllers: [...controllers, cameraController], updatables: [masterController]};
 }
