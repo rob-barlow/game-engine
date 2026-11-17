@@ -43,17 +43,17 @@ export class BoidsMasterController {
         const boids = this.boids;
         const forwards = boids.map(boid => Vec3.normalise(Matrix3.apply(boid.transform.orientation, {x: 0, y: 0, z: 1})))
 
-        const grid = new Map<string, Boid[]>();
+        const grid = new Map<string, number[]>();
         const cellSize = visualRange;
 
-        // Store all boids in the grid
+        // Store all boid indices in the grid
         for (let i = 0; i < this.controllers.length; i++){
             const boid = boids[i]
             const gridKey = `${Math.floor(boid.transform.position.x / cellSize)},${Math.floor(boid.transform.position.y / cellSize)},${Math.floor(boid.transform.position.z / cellSize)}`
             if (!grid.has(gridKey))
                  grid.set(gridKey, [])
 
-            grid.get(gridKey).push(boid);
+            grid.get(gridKey).push(i);
         }
 
         for (let i = 0; i < this.controllers.length; i++){
@@ -76,11 +76,12 @@ export class BoidsMasterController {
 
                     if (!cellBoids) continue;
 
-                    for (const other of cellBoids) {
-                        const offset = Vec3.subtract(other.transform.position, boid.transform.position);
+                    for (const otherBoidIndex of cellBoids) {
+                        const otherBoid = boids[otherBoidIndex];
+                        const offset = Vec3.subtract(otherBoid.transform.position, boid.transform.position);
                         const distanceSqrd = Vec3.dot(offset, offset)
                         if ( distanceSqrd < visualRange * visualRange && distanceSqrd != 0) {
-                            center = Vec3.add(center, other.transform.position)
+                            center = Vec3.add(center, otherBoid.transform.position)
 
                             // Separation
                             const separationToTarget = Vec3.normalise(offset)
@@ -92,7 +93,7 @@ export class BoidsMasterController {
                             separationAngle -= (1/distanceSqrd) * Math.atan2(separationCross.y, separationDot); // 2 
                         
                             // Alignment
-                            const otherForward = forwards[boids.indexOf(other)] // 1
+                            const otherForward = forwards[otherBoidIndex] // 1
 
                             const alignmentDot = Vec3.dot(forward, otherForward);
 
