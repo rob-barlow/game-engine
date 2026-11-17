@@ -7,11 +7,12 @@ import { DroneController } from "../../../controls/in-game/controllers/DroneCont
 import Drone from "../../game-objects/Drone";
 import { IndividualBoidController } from "./controllers/IndividualBoidController";
 import { BoidXBound, BoidZBound } from "../../../utils/constants";
+import { Updatable } from "../../../app/Updatable";
 
 const boidCubeRoot = 40;
 const posScale = 0.5;
 
-export function createBoidsScene(): {scene: Scene, controllers: Controller[]} {
+export function createBoidsScene(): {scene: Scene, controllers: Controller[], updatables: Updatable[]} {
     const scene = new Scene();
 
     const playerTransform: Transform = {
@@ -56,5 +57,5 @@ export function createBoidsScene(): {scene: Scene, controllers: Controller[]} {
     // scene.add(centralPanel);
     // masterController.setCentralPanel(centralPanel)
 
-    return {scene: scene, controllers: [...controllers, cameraController]};
+    return {scene: scene, controllers: [...controllers, cameraController], updatables: [masterController]};
 }

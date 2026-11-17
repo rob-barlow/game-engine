@@ -17,11 +17,13 @@ import { createTestScene } from "../scene/scenes/TestScene/TestScene";
 import { createCvScene } from "../scene/scenes/CvScene/CvScene";
 import AssetManager from "./AssetManager";
 import { createBoidsScene } from "../scene/scenes/BoidsScene/BoidsScene";
+import { Updatable } from "./Updatable";
 
 export class Engine{
     renderer: Renderer = new CpuRenderer();
     scene: Scene;
     controllers: Controller[] = [];
+    updatables: Updatable[] = [];
 
     inputReader: InputReader = new InputReader()
 
@@ -55,24 +57,10 @@ export class Engine{
         requestAnimationFrame(this.frame);
     }
 
-    update(dt: number){
-        this.gameStateManager.update()
-
-        switch (this.gameStateManager.state){
-            case GameState.PlayingMazdle:
-                this.updateGame(dt);
-                break;
-            case GameState.MainMenu:
-                break;
-            case GameState.Settings:
-                break;
-        }
-
-        this.inputReader.iterateFrame()
-    }
-
     updateGame(dt: number){
         let intent: Intent | null
+        
+        this.updatables.forEach(updatable => updatable.update(dt))
 
         this.controllers.forEach(controller => {
             intent = controller.getIntent();
@@ -119,6 +107,7 @@ export class Engine{
         this.uiController.setScene(sceneEnum);
         let scene: Scene;
         let controllers: Controller[];
+        let updatables: Updatable[] = [];
 
         switch (sceneEnum){
             case Scenes.Maze:
@@ -131,7 +120,7 @@ export class Engine{
                 ({scene, controllers} = createTestScene());
                 break;
             case Scenes.Boids:
-                ({scene, controllers} = createBoidsScene());
+                ({scene, controllers, updatables} = createBoidsScene());
                 break;
             default:
                 ({scene, controllers} = createCvScene());
@@ -140,6 +129,7 @@ export class Engine{
                 
         this.scene = scene;
         this.controllers = controllers
+        this.updatables = updatables;
 
         let numOfTriangles = 0;
 

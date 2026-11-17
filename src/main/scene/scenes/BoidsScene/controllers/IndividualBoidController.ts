@@ -12,6 +12,15 @@ export class IndividualBoidController implements Controller {
     settings: GameSettings
     masterController: BoidsMasterController;
 
+    intent: Intent = {
+        xDirection: 0,
+        yDirection: 0,
+        zDirection: 1,
+        pitch: 0,
+        yaw: 0,
+        roll: 0,
+    };
+
     constructor(target: GameObject, masterController: BoidsMasterController, settings?: GameSettings, inputReader?: InputReader)
     constructor(targets: GameObject[], masterController: BoidsMasterController, settings?: GameSettings, inputReader?: InputReader)
     
@@ -29,7 +38,7 @@ export class IndividualBoidController implements Controller {
     }
 
     getIntent(): Intent | null {
-        return this.masterController.getIntent(this);
+        return this.intent;
     }
 
     setInputReader(inputReader: InputReader): void {

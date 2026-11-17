@@ -1,44 +1,19 @@
+import { Updatable } from "../../../../app/Updatable";
 import { Matrix3, Vec2, Vec3 } from "../../../../maths";
-import { Intent } from "../../../../maths/Intent";
 import { BoidXBound, BoidZBound } from "../../../../utils/constants";
 import { Boid } from "../game-objects/Boid";
 import { IndividualBoidController } from "./IndividualBoidController";
 
-export class BoidsMasterController {
+export class BoidsMasterController implements Updatable {
     controllers: IndividualBoidController[] = []
     boids: Boid[] = []
-    intents: Intent[] = []
+
     setControllers(controllers: IndividualBoidController[]) {
         this.controllers = controllers;
-        let intent = Intent.empty();
-        intent.zDirection = 1;
-        this.intents = new Array(controllers.length);
-        for (let i = 0; i < controllers.length; i++){
-            this.intents[i] = {
-                xDirection: 0,
-                yDirection: 0,
-                zDirection: 1,
-                yaw: 0,
-                pitch: 0,
-                roll: 0
-            };
-        }
-
         this.boids = this.controllers.map(controller => controller.targets[0])
     }
 
-    getIntent(controller: IndividualBoidController){
-        const index = this.controllers.indexOf(controller);
-        if (index !== -1) {
-            if (index == 0){
-                this.updateIntents();
-            }
-            return this.intents[index];
-        }
-        return Intent.empty();
-    }
-
-    updateIntents() {
+    update(dt: number) {
         // Coherence
         const boids = this.boids;
         const forwards = boids.map(boid => Vec3.normalise(Matrix3.apply(boid.transform.orientation, {x: 0, y: 0, z: 1})))
@@ -72,34 +47,27 @@ export class BoidsMasterController {
 
                     const key = `${Math.floor(boid.transform.position.x / cellSize) + dx},${Math.floor(boid.transform.position.y / cellSize)},${Math.floor(boid.transform.position.z / cellSize) + dz}`;
 
-                    const cellBoids = grid.get(key);
+                    const cellBoids = grid.get(key); // 2
 
                     if (!cellBoids) continue;
 
                     for (const otherBoidIndex of cellBoids) {
                         const otherBoid = boids[otherBoidIndex];
-                        const offset = Vec3.subtract(otherBoid.transform.position, boid.transform.position);
+                        const offset = Vec3.subtract(otherBoid.transform.position, boid.transform.position);  // 3
                         const distanceSqrd = Vec3.dot(offset, offset)
                         if ( distanceSqrd < visualRange * visualRange && distanceSqrd != 0) {
                             center = Vec3.add(center, otherBoid.transform.position)
+                            const distanceSqrdInverse = 1/distanceSqrd;
 
                             // Separation
-                            const separationToTarget = Vec3.normalise(offset)
+                            const separationToTarget = Vec3.scale(offset, distanceSqrdInverse)
                             
-                            const separationDot = Vec3.dot(forward, separationToTarget);
-
-                            const separationCross = Vec3.cross(forward, separationToTarget);
-
-                            separationAngle -= (1/distanceSqrd) * Math.atan2(separationCross.y, separationDot); // 2 
+                            separationAngle -= (distanceSqrdInverse) * getAngle(forward, separationToTarget); // 1
                         
                             // Alignment
-                            const otherForward = forwards[otherBoidIndex] // 1
+                            const otherForward = forwards[otherBoidIndex]
 
-                            const alignmentDot = Vec3.dot(forward, otherForward);
-
-                            const alignmentCross = Vec3.cross(forward, otherForward);
-
-                            alignmentAngle += (1/distanceSqrd) * Math.atan2(alignmentCross.y, alignmentDot); // 3
+                            alignmentAngle += (distanceSqrdInverse) * getAngle(forward, otherForward) // 1
                             numOfNeighbours++;
                         }
                         
@@ -109,13 +77,9 @@ export class BoidsMasterController {
             
             if (numOfNeighbours > 0){
                 center = Vec3.scale(center, 1/(numOfNeighbours + 1))
-    
                 const coherenceToTarget = Vec3.normalise(Vec3.subtract(center, boid.transform.position))
-                const coherenceDot = Vec3.dot(forward, coherenceToTarget);
     
-                const coherenceCross = Vec3.cross(forward, coherenceToTarget);
-    
-                coherenceAngle += Math.atan2(coherenceCross.y, coherenceDot);
+                coherenceAngle += getAngle(forward, coherenceToTarget)
                 alignmentAngle /= numOfNeighbours;
                 separationAngle /= numOfNeighbours;
             }
@@ -130,11 +94,7 @@ export class BoidsMasterController {
             else if (boid.transform.position.z > BoidZBound) desired.z -= 1;
 
             if (desired.x != 0 || desired.z != 0) {
-                const dot = Vec3.dot(forward, desired);
-
-                const cross = Vec3.cross(forward, desired);
-
-                boundsAngle += Math.atan2(cross.y, dot);
+                boundsAngle += getAngle(forward, desired)
             }
 
             const a = coherenceAngle * coherenceWeight
@@ -143,7 +103,7 @@ export class BoidsMasterController {
             const d = boundsAngle * boundsWeight
 
             const correctYaw = Math.max(Math.min(a + b + c + d, Math.PI/2), -Math.PI/2);
-            this.intents[i].yaw = correctYaw
+            this.controllers[i].intent.yaw = correctYaw * dt * dtCorrection;
         }
     }
 }
@@ -153,4 +113,13 @@ const separationWeight = 0.5;
 const alignmentWeight = 2;
 const boundsWeight = 10;
 
+const dtCorrection = 100;
+
 const visualRange = BoidXBound / 20;
+
+function getAngle(v1: Vec3, v2: Vec3){
+    // dot = dot(forward, desired);
+    // cross = cross(forward, desired);
+    // atan(cross.y, dot);
+    return Math.atan2(v1.z * v2.x - v1.x * v2.z, v1.x * v2.x + v1.y * v2.y + v1.z * v2.z);
+}
