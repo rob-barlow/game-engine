@@ -46,6 +46,7 @@ export class BoidsMasterController {
         const grid = new Map<string, Boid[]>();
         const cellSize = visualRange;
 
+        // Store all boids in the grid
         for (let i = 0; i < this.controllers.length; i++){
             const boid = boids[i]
             const gridKey = `${Math.floor(boid.transform.position.x / cellSize)},${Math.floor(boid.transform.position.y / cellSize)},${Math.floor(boid.transform.position.z / cellSize)}`
@@ -59,7 +60,13 @@ export class BoidsMasterController {
             const boid = boids[i]
             const forward = forwards[i]
 
-            const neighbours: {boid: Boid, offset: Vec3, distanceSqrd: number}[] = []
+            let center = boid.transform.position;
+            let coherenceAngle = 0;
+            let separationAngle = 0
+            let alignmentAngle = 0;
+            let boundsAngle = 0;
+            let numOfNeighbours = 0;
+
             for (let dz = -1; dz <= 1; dz++) {
                 for (let dx = -1; dx <= 1; dx++) {
 
@@ -72,46 +79,35 @@ export class BoidsMasterController {
                     for (const other of cellBoids) {
                         const offset = Vec3.subtract(other.transform.position, boid.transform.position);
                         const distanceSqrd = Vec3.dot(offset, offset)
-                        if ( distanceSqrd < visualRange * visualRange && distanceSqrd != 0)
-                            neighbours.push({
-                                boid: other,
-                                offset,
-                                distanceSqrd: distanceSqrd,
-                            });
+                        if ( distanceSqrd < visualRange * visualRange && distanceSqrd != 0) {
+                            center = Vec3.add(center, other.transform.position)
+
+                            // Separation
+                            const separationToTarget = Vec3.normalise(offset)
+                            
+                            const separationDot = Vec3.dot(forward, separationToTarget);
+
+                            const separationCross = Vec3.cross(forward, separationToTarget);
+
+                            separationAngle -= (1/distanceSqrd) * Math.atan2(separationCross.y, separationDot); // 2 
+                        
+                            // Alignment
+                            const otherForward = forwards[boids.indexOf(other)] // 1
+
+                            const alignmentDot = Vec3.dot(forward, otherForward);
+
+                            const alignmentCross = Vec3.cross(forward, otherForward);
+
+                            alignmentAngle += (1/distanceSqrd) * Math.atan2(alignmentCross.y, alignmentDot); // 3
+                            numOfNeighbours++;
+                        }
+                        
                     }
                 }
             }
             
-            // Coherence 
-            let center = boid.transform.position;
-            let coherenceAngle = 0;
-            let separationAngle = 0
-            let alignmentAngle = 0;
-            let boundsAngle = 0;
-            neighbours.forEach(neighbour => {
-                center = Vec3.add(center, neighbour.boid.transform.position)
-
-                // Separation
-                const separationToTarget = Vec3.normalise(neighbour.offset)
-                
-                const separationDot = Vec3.dot(forward, separationToTarget);
-
-                const separationCross = Vec3.cross(forward, separationToTarget);
-
-                separationAngle -= (1/neighbour.distanceSqrd) * Math.atan2(separationCross.y, separationDot);
-            
-                // Alignment
-                const otherForward = forwards[boids.indexOf(neighbour.boid)]
-
-                const alignmentDot = Vec3.dot(forward, otherForward);
-
-                const alignmentCross = Vec3.cross(forward, otherForward);
-
-                alignmentAngle += (1/neighbour.distanceSqrd) * Math.atan2(alignmentCross.y, alignmentDot);
-            })
-
-            if (neighbours.length > 0){
-                center = Vec3.scale(center, 1/(neighbours.length + 1))
+            if (numOfNeighbours > 0){
+                center = Vec3.scale(center, 1/(numOfNeighbours + 1))
     
                 const coherenceToTarget = Vec3.normalise(Vec3.subtract(center, boid.transform.position))
                 const coherenceDot = Vec3.dot(forward, coherenceToTarget);
@@ -119,8 +115,8 @@ export class BoidsMasterController {
                 const coherenceCross = Vec3.cross(forward, coherenceToTarget);
     
                 coherenceAngle += Math.atan2(coherenceCross.y, coherenceDot);
-                alignmentAngle /= neighbours.length;
-                separationAngle /= neighbours.length;
+                alignmentAngle /= numOfNeighbours;
+                separationAngle /= numOfNeighbours;
             }
 
             // keep in bound
