@@ -36,7 +36,7 @@ export function createBoidsScene(): {scene: Scene, controllers: Controller[], up
                 const cubeTransform: Transform = {
                     position: {x: posScale * x * Math.random(), y: 0, z: posScale * z * Math.random()},
                         orientation: Matrix3.getRotationMatrix('y', Math.random() * 2 * Math.PI),
-                        scale: {x: 0.1, y: 0.1, z: 0.1},
+                        scale: {x: 0.3, y: 0.3, z: 0.3},
                     }
                     
                 const boid = new Boid(cubeTransform, [255, 255, 255]);

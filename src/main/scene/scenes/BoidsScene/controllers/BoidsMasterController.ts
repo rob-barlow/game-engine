@@ -18,13 +18,14 @@ export class BoidsMasterController implements Updatable {
         const boids = this.boids;
         const forwards = boids.map(boid => Vec3.normalise(Matrix3.apply(boid.transform.orientation, {x: 0, y: 0, z: 1})))
 
-        const grid = new Map<string, number[]>();
+        const grid = new Map<number, number[]>();
         const cellSize = visualRange;
 
         // Store all boid indices in the grid
         for (let i = 0; i < controllers.length; i++){
             const boid = boids[i]
-            const gridKey = `${Math.floor(boid.transform.position.x / cellSize)},${Math.floor(boid.transform.position.y / cellSize)},${Math.floor(boid.transform.position.z / cellSize)}`
+            const gridKey = Math.floor(boid.transform.position.x / cellSize) * gridStride + Math.floor(boid.transform.position.z / cellSize)
+            // const gridKey = `${Math.floor(boid.transform.position.x / cellSize)},${Math.floor(boid.transform.position.y / cellSize)},${Math.floor(boid.transform.position.z / cellSize)}`
             if (!grid.has(gridKey))
                  grid.set(gridKey, [])
 
@@ -45,7 +46,7 @@ export class BoidsMasterController implements Updatable {
             for (let dz = -1; dz <= 1; dz++) {
                 for (let dx = -1; dx <= 1; dx++) {
 
-                    const key = `${Math.floor(boid.transform.position.x / cellSize) + dx},${Math.floor(boid.transform.position.y / cellSize)},${Math.floor(boid.transform.position.z / cellSize) + dz}`;
+                    const key = (Math.floor(boid.transform.position.x / cellSize) + dx) * gridStride + (Math.floor(boid.transform.position.z / cellSize) + dz)
 
                     const cellBoids = grid.get(key); // 2
 
@@ -145,11 +146,12 @@ export class BoidsMasterController implements Updatable {
 }
 
 const coherenceWeight = 1;
-const separationWeight = 0.3;
-const alignmentWeight = 1;
+const separationWeight = 0.1;
+const alignmentWeight = 3;
 const boundsWeight = 10;
 
 const dtCorrection = 50;
 
 const visualRange = BoidXBound / 40;
+const gridStride = BoidXBound * 2
 const EPS = 0.001;

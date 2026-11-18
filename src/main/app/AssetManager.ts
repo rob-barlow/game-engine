@@ -15,7 +15,11 @@ export default class AssetManager {
 
             const image =  new Image();
 
-            image.src = url
+            image.src = "./wall.jpg"
+
+            // if (i == 1){
+            //     image.src = "./wall.jpg"
+            // }
             // image.src = "izzyjoe.jpg"
             await image.decode();
             this.imageMap.set(url, image);
