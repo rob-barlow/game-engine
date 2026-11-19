@@ -14,25 +14,20 @@ export class BoidsMasterController implements Updatable {
     }
 
     getGridIndex(boid: Boid){
-        // (floor x * range of possible x values) + floor z
-        const cellSize = visualRange;
-        return (Math.floor(boid.transform.position.x) * (xBoidUpperBound + (xBoidLowerBound * 2))) + Math.floor(boid.transform.position.z)
+        return Math.floor(boid.transform.position.x / cellSize) + (Math.floor(boid.transform.position.z / cellSize) * gridWidth)
     }
 
     update(dt: number) {
         const controllers = this.controllers;
         const boids = this.boids;
         const boidsLength = boids.length;
-        const numOfCells = (xBoidUpperBound + (xBoidLowerBound * 2)) * (zBoidUpperBound + (zBoidLowerBound * 2))
         const forwards = boids.map(boid => Vec3.normalise(Matrix3.apply(boid.transform.orientation, {x: 0, y: 0, z: 1})))
 
-        const cellSize = visualRange;
-
+        // ORDER BOIDS AND FORM CELL START ARRAY
         // Assume bounds are 0 and xBoidUpperBound + xBoidLowerBound for x Axis
-        const stride = xBoidUpperBound + (xBoidLowerBound * 2)
         const cntBoids = new Array<number>(numOfCells).fill(0);
         const orderedBoidsIndex = new Array<number>(boidsLength).fill(0);
-        const cellStart = new Array<number>(numOfCells).fill(-1);
+        const cellStart = new Array<number>(numOfCells).fill(-1); 
         
         for (let i = 0; i < boidsLength; i++){
             const boid = boids[i]
@@ -57,6 +52,8 @@ export class BoidsMasterController implements Updatable {
             cntBoids[cellIndex] -= 1;
         }
 
+        const boidIndicesInSurroundingCells: number[] = [];
+        const boidIndicesInCurrentCell: number[] = [];
         // loop each cell
         for (let currentCellIndex = 0; currentCellIndex < numOfCells; currentCellIndex++){
             const sortedBoidStartIndex = cellStart[currentCellIndex]
@@ -65,28 +62,36 @@ export class BoidsMasterController implements Updatable {
             // if no boid in cell, continue
             if (sortedBoidStartIndex == -1 || sortedBoidEndIndex == -1) continue
             
-            const boidIndicesInCurrentCell = orderedBoidsIndex.slice(sortedBoidStartIndex, sortedBoidEndIndex);
+            boidIndicesInCurrentCell.push(...orderedBoidsIndex.slice(sortedBoidStartIndex, sortedBoidEndIndex));
 
-            const boidIndicesInSurroundingCells = [];
             // build 3x3 grid of cells
-            for (let middleCellIndexOnRow of [currentCellIndex - stride, currentCellIndex, currentCellIndex + stride]){
+            for (let middleCellIndexOnRow of [currentCellIndex - gridWidth, currentCellIndex, currentCellIndex + gridWidth]){
                 if (cellStart[middleCellIndexOnRow] == -1 && cellStart[middleCellIndexOnRow + 1] == -1) continue
 
                 let startIndex = 0;
                 let endIndex = 0;
-                for (let z = 0; z < 3; z++){
-                    startIndex = cellStart[middleCellIndexOnRow + 1 - z] != -1 ? cellStart[middleCellIndexOnRow + 1 - z] : startIndex
-                    endIndex = cellStart[middleCellIndexOnRow + z] != -1 ? cellStart[middleCellIndexOnRow + z] : endIndex
+
+                // if cell on far right, dont check for stuff in the cell to the right.
+                if ((middleCellIndexOnRow + 1) % gridWidth == 0) {
+                    startIndex = cellStart[middleCellIndexOnRow - 1] != -1 ? cellStart[middleCellIndexOnRow - 1] : cellStart[middleCellIndexOnRow]
+                    endIndex = cellStart[middleCellIndexOnRow + 1]
+                }
+                else if ((middleCellIndexOnRow) % gridWidth == 0) {
+                    startIndex = cellStart[middleCellIndexOnRow]
+                    endIndex = cellStart[middleCellIndexOnRow + 2] != -1 ? cellStart[middleCellIndexOnRow + 2] : cellStart[middleCellIndexOnRow + 1]
+                }
+                else {
+                    for (let z = 0; z < 3; z++){
+                        startIndex = cellStart[middleCellIndexOnRow + 1 - z] != -1 ? cellStart[middleCellIndexOnRow + 1 - z] : startIndex
+                        endIndex = cellStart[middleCellIndexOnRow + z] != -1 ? cellStart[middleCellIndexOnRow + z] : endIndex
+                    }
                 }
 
                 boidIndicesInSurroundingCells.push(...orderedBoidsIndex.slice(startIndex, endIndex))
             }
 
-            let numOfNeighbours = boidIndicesInSurroundingCells.length - 1;
-
             // loop each boid within the cell
-            for (let boidInCellIndex = 0; boidInCellIndex < boidIndicesInCurrentCell.length; boidInCellIndex++){
-                const boidIndex = boidIndicesInCurrentCell[boidInCellIndex]
+            for (let boidIndex of boidIndicesInCurrentCell){
                 const boid = boids[boidIndex]
                 const forward = forwards[boidIndex]
 
@@ -95,10 +100,10 @@ export class BoidsMasterController implements Updatable {
                 let separationAngle = 0
                 let alignmentAngle = 0;
                 let boundsAngle = 0;
+                let numOfNeighbours = 0
 
                 // loop each other boid within the cell
-                for (let otherBoidInCellIndex = 0; otherBoidInCellIndex < boidIndicesInSurroundingCells.length; otherBoidInCellIndex++){
-                    const otherBoidIndex = boidIndicesInSurroundingCells[otherBoidInCellIndex]
+                for (let otherBoidIndex of boidIndicesInSurroundingCells){
                     if (otherBoidIndex == boidIndex) continue
                     
                     const otherBoid = boids[otherBoidIndex];
@@ -132,6 +137,7 @@ export class BoidsMasterController implements Updatable {
                         else {
                             alignmentAngle += (distanceSqrdInverse) * alignmentCrossY * Math.PI
                         }
+                        numOfNeighbours++
                     }
                 }
 
@@ -187,17 +193,29 @@ export class BoidsMasterController implements Updatable {
                 const correctYaw = Math.max(Math.min(a + b + c + d, Math.PI/2), -Math.PI/2);
                 controllers[boidIndex].intent.yaw = correctYaw * dt * dtCorrection;
             }
+
+            boidIndicesInCurrentCell.length = 0
+            boidIndicesInSurroundingCells.length = 0;
         }
     }
 }
 
-const coherenceWeight = 1;
+
+
+
+const visualRange = 2;
+// const visualRange = xBoidUpperBound / 40;
+
+const coherenceWeight = 0.3;
 const separationWeight = 0.5;
 const alignmentWeight = 1;
 const boundsWeight = 20;
-
 const dtCorrection = 50;
 
-const visualRange = xBoidUpperBound / 40;
-// const gridStride = xBoidUpperBound * 2
+const cellSize = Math.ceil(visualRange);
+
+const gridWidth = (xBoidUpperBound + (xBoidLowerBound * 2)) / cellSize
+const gridHeight = (zBoidUpperBound + (zBoidLowerBound * 2)) / cellSize
+const numOfCells = gridWidth * gridHeight
+
 const EPS = 0.001;
