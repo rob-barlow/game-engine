@@ -28,11 +28,13 @@ export class BoidsMasterController implements Updatable {
         const cntBoids = new Array<number>(numOfCells).fill(0);
         const orderedBoidsIndex = new Array<number>(boidsLength).fill(0);
         const cellStart = new Array<number>(numOfCells).fill(-1); 
+        const boidCell = new Array<number>(boidsLength).fill(0);
         
         for (let i = 0; i < boidsLength; i++){
             const boid = boids[i]
             const gridIndex = this.getGridIndex(boid)
             cntBoids[gridIndex] += 1;
+            boidCell[i] = gridIndex
         }
 
         for (let i = 1; i < cntBoids.length; i++){
@@ -40,8 +42,7 @@ export class BoidsMasterController implements Updatable {
         }
 
         for (let i = boidsLength - 1; i >= 0; i--){
-            const boid = boids[i]
-            const cellIndex = this.getGridIndex(boid)
+            const cellIndex = boidCell[i]
             if (cellStart[cellIndex + 1] == -1){
                 cellStart[cellIndex + 1] = cntBoids[cellIndex];
             }
@@ -53,15 +54,15 @@ export class BoidsMasterController implements Updatable {
         }
 
         const boidIndicesInSurroundingCells: number[] = [];
-        // const boidIndicesInCurrentCell: number[] = [];
-
-        let cellIndex = 0
+        let cellIndex = -1
 
         // loop each boid
         for (let boidIndex of orderedBoidsIndex){
             let boid = boids[boidIndex]
-            let currentCellIndex = this.getGridIndex(boid);
+            const currentCellIndex = boidCell[boidIndex]
+            const forward = forwards[boidIndex]
 
+            // if next boid is not in the same cell as the previous boid
             if (cellIndex != currentCellIndex){
                 cellIndex = currentCellIndex;
 
@@ -92,8 +93,6 @@ export class BoidsMasterController implements Updatable {
                     boidIndicesInSurroundingCells.push(...orderedBoidsIndex.slice(startIndex, endIndex))
                 }
             }
-
-            const forward = forwards[boidIndex]
 
             let center = boid.transform.position;
             let coherenceAngle = 0;
@@ -141,6 +140,7 @@ export class BoidsMasterController implements Updatable {
                 }
             }
 
+            // average the center, the separation and alignment angle num of neighbours
             if (numOfNeighbours > 0){
                 center = Vec3.scale(center, 1/(numOfNeighbours + 1))
                 const coherenceToTarget = Vec3.normalise(Vec3.subtract(center, boid.transform.position))
@@ -167,12 +167,12 @@ export class BoidsMasterController implements Updatable {
             if (boid.transform.position.z < zBoidLowerBound) desired.z += 1;
             else if (boid.transform.position.z > zBoidUpperBound) desired.z -= 1;
 
-            if (desired.x != 0 && desired.z != 0) {
-                desired.x = desired.x / Math.sqrt(2);
-                desired.z = desired.z / Math.sqrt(2);
-            }
-
             if (desired.x != 0 || desired.z != 0) {
+                if (desired.x != 0 && desired.z != 0) {
+                    desired.x = desired.x / Math.sqrt(2);
+                    desired.z = desired.z / Math.sqrt(2);
+                }
+
                 // Steer together
                 const crossY = forward.z * desired.x - forward.x * desired.z
 
@@ -200,7 +200,7 @@ export class BoidsMasterController implements Updatable {
 const visualRange = 1;
 // const visualRange = xBoidUpperBound / 40;
 
-const coherenceWeight = 1;
+const coherenceWeight = 1.5;
 const separationWeight = 0.5;
 const alignmentWeight = 1;
 const boundsWeight = 20;
