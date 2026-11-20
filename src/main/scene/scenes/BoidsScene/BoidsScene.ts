@@ -9,7 +9,7 @@ import { IndividualBoidController } from "./controllers/IndividualBoidController
 import { xBoidLowerBound, xBoidUpperBound, zBoidLowerBound, zBoidUpperBound } from "../../../utils/constants";
 import { Updatable } from "../../../app/Updatable";
 
-const boidSquareRoot = 90;
+const boidSquareRoot = 100;
 
 export function createBoidsScene(): {scene: Scene, controllers: Controller[], updatables: Updatable[]} {
     const scene = new Scene();

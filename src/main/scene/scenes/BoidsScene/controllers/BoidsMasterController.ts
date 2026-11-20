@@ -7,10 +7,17 @@ import { IndividualBoidController } from "./IndividualBoidController";
 export class BoidsMasterController implements Updatable {
     controllers: IndividualBoidController[] = []
     boids: Boid[] = []
+    cntBoids = new Array<number>(numOfCells).fill(0);
+    cellStart = new Array<number>(numOfCells).fill(-1); 
+
+    orderedBoidsIndex: number[]
+    boidCell: number[]
 
     setControllers(controllers: IndividualBoidController[]) {
         this.controllers = controllers;
         this.boids = this.controllers.map(controller => controller.targets[0])
+        this.orderedBoidsIndex = new Array<number>(this.boids.length)
+        this.boidCell = new Array<number>(this.boids.length)
     }
 
     getGridIndex(boid: Boid){
@@ -25,10 +32,10 @@ export class BoidsMasterController implements Updatable {
 
         // ORDER BOIDS AND FORM CELL START ARRAY
         // Assume bounds are 0 and xBoidUpperBound + xBoidLowerBound for x Axis
-        const cntBoids = new Array<number>(numOfCells).fill(0);
-        const orderedBoidsIndex = new Array<number>(boidsLength).fill(0);
-        const cellStart = new Array<number>(numOfCells).fill(-1); 
-        const boidCell = new Array<number>(boidsLength).fill(0);
+        const cntBoids = this.cntBoids.fill(0);
+        const orderedBoidsIndex = this.orderedBoidsIndex.fill(0);
+        const cellStart = this.cellStart.fill(-1); 
+        const boidCell = this.boidCell.fill(0);
         
         for (let i = 0; i < boidsLength; i++){
             const boid = boids[i]
@@ -195,7 +202,6 @@ export class BoidsMasterController implements Updatable {
         }
     }
 }
-
 
 const visualRange = 1;
 // const visualRange = xBoidUpperBound / 40;
