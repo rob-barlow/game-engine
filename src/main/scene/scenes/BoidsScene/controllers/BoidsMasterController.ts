@@ -7,8 +7,8 @@ import { IndividualBoidController } from "./IndividualBoidController";
 export class BoidsMasterController implements Updatable {
     controllers: IndividualBoidController[] = []
     boids: Boid[] = []
+    forwards: Vec3[] = []
     cntBoids = new Array<number>(numOfCells).fill(0);
-    cellStart = new Array<number>(numOfCells).fill(-1); 
 
     orderedBoidsIndex: number[]
     boidCell: number[]
@@ -18,6 +18,7 @@ export class BoidsMasterController implements Updatable {
         this.boids = this.controllers.map(controller => controller.targets[0])
         this.orderedBoidsIndex = new Array<number>(this.boids.length)
         this.boidCell = new Array<number>(this.boids.length)
+        this.forwards = new Array<Vec3>(this.boids.length)
     }
 
     getGridIndex(boid: Boid){
@@ -27,34 +28,34 @@ export class BoidsMasterController implements Updatable {
     update(dt: number) {
         const controllers = this.controllers;
         const boids = this.boids;
+        const forwards = this.forwards;
+        
         const boidsLength = boids.length;
-        const forwards = boids.map(boid => Vec3.normalise(Matrix3.apply(boid.transform.orientation, {x: 0, y: 0, z: 1})))
 
         // ORDER BOIDS AND FORM CELL START ARRAY
         // Assume bounds are 0 and xBoidUpperBound + xBoidLowerBound for x Axis
         const cntBoids = this.cntBoids.fill(0);
-        const orderedBoidsIndex = this.orderedBoidsIndex.fill(0);
-        const cellStart = this.cellStart.fill(-1); 
-        const boidCell = this.boidCell.fill(0);
+        
+        const orderedBoidsIndex = this.orderedBoidsIndex;
+        const boidCell = this.boidCell;
         
         for (let i = 0; i < boidsLength; i++){
             const boid = boids[i]
             const gridIndex = this.getGridIndex(boid)
             cntBoids[gridIndex] += 1;
-            boidCell[i] = gridIndex
+            boidCell[i] = gridIndex;
+            
+            // const dir = Matrix3.apply(boid.transform.orientation, {x: 0, y: 0, z: 1})
+            const dir: Vec3 = {x: boid.transform.orientation[0][2], y: boid.transform.orientation[1][2], z: boid.transform.orientation[2][2]}
+            forwards[i] = Vec3.normalise(dir);
         }
 
         for (let i = 1; i < cntBoids.length; i++){
-            cntBoids[i] += cntBoids[i-1]
+            cntBoids[i] += cntBoids[i - 1]
         }
 
         for (let i = boidsLength - 1; i >= 0; i--){
             const cellIndex = boidCell[i]
-            if (cellStart[cellIndex + 1] == -1){
-                cellStart[cellIndex + 1] = cntBoids[cellIndex];
-            }
-            
-            cellStart[cellIndex] = cntBoids[cellIndex] - 1;
 
             orderedBoidsIndex[cntBoids[cellIndex] - 1] = i
             cntBoids[cellIndex] -= 1;
@@ -76,28 +77,12 @@ export class BoidsMasterController implements Updatable {
                 // build 3x3 grid of cells
                 boidIndicesInSurroundingCells.length = 0
                 for (let middleCellIndexOnRow of [currentCellIndex - gridWidth, currentCellIndex, currentCellIndex + gridWidth]){
-                    if (cellStart[middleCellIndexOnRow] == -1 && cellStart[middleCellIndexOnRow + 1] == -1) continue
+                    const startIndex = cntBoids[middleCellIndexOnRow - 1]
+                    const endIndex = cntBoids[middleCellIndexOnRow + 2]
 
-                    let startIndex = 0;
-                    let endIndex = 0;
-
-                    // if cell on far right, dont check for stuff in the cell to the right.
-                    if ((middleCellIndexOnRow + 1) % gridWidth == 0) {
-                        startIndex = cellStart[middleCellIndexOnRow - 1] != -1 ? cellStart[middleCellIndexOnRow - 1] : cellStart[middleCellIndexOnRow]
-                        endIndex = cellStart[middleCellIndexOnRow + 1]
+                    for (let surroundingBoidIndex = startIndex; surroundingBoidIndex < endIndex; surroundingBoidIndex++){
+                        boidIndicesInSurroundingCells.push(orderedBoidsIndex[surroundingBoidIndex])    
                     }
-                    else if ((middleCellIndexOnRow) % gridWidth == 0) {
-                        startIndex = cellStart[middleCellIndexOnRow]
-                        endIndex = cellStart[middleCellIndexOnRow + 2] != -1 ? cellStart[middleCellIndexOnRow + 2] : cellStart[middleCellIndexOnRow + 1]
-                    }
-                    else {
-                        for (let z = 0; z < 3; z++){
-                            startIndex = cellStart[middleCellIndexOnRow + 1 - z] != -1 ? cellStart[middleCellIndexOnRow + 1 - z] : startIndex
-                            endIndex = cellStart[middleCellIndexOnRow + z] != -1 ? cellStart[middleCellIndexOnRow + z] : endIndex
-                        }
-                    }
-
-                    boidIndicesInSurroundingCells.push(...orderedBoidsIndex.slice(startIndex, endIndex))
                 }
             }
 
@@ -116,7 +101,7 @@ export class BoidsMasterController implements Updatable {
 
                 const offset = Vec3.subtract(otherBoid.transform.position, boid.transform.position);
                 const distanceSqrd = Vec3.dot(offset, offset)
-                if ( distanceSqrd < visualRange * visualRange && distanceSqrd != 0) {
+                if ( distanceSqrd < visualRangeSquared && distanceSqrd != 0) {
                     center = Vec3.add(center, otherBoid.transform.position)
                     const distanceSqrdInverse = 1/distanceSqrd;
 
@@ -204,6 +189,7 @@ export class BoidsMasterController implements Updatable {
 }
 
 const visualRange = 1;
+const visualRangeSquared = visualRange * visualRange;
 // const visualRange = xBoidUpperBound / 40;
 
 const coherenceWeight = 1.5;
