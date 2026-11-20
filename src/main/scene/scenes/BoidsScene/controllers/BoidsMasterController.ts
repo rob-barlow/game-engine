@@ -45,9 +45,7 @@ export class BoidsMasterController implements Updatable {
             cntBoids[gridIndex] += 1;
             boidCell[i] = gridIndex;
             
-            // const dir = Matrix3.apply(boid.transform.orientation, {x: 0, y: 0, z: 1})
-            const dir: Vec3 = {x: boid.transform.orientation[0][2], y: boid.transform.orientation[1][2], z: boid.transform.orientation[2][2]}
-            forwards[i] = Vec3.normalise(dir);
+            forwards[i] = {x: boid.transform.orientation[0][2], y: boid.transform.orientation[1][2], z: boid.transform.orientation[2][2]}
         }
 
         for (let i = 1; i < cntBoids.length; i++){
@@ -66,7 +64,7 @@ export class BoidsMasterController implements Updatable {
 
         // loop each boid
         for (let boidIndex of orderedBoidsIndex){
-            let boid = boids[boidIndex]
+            const boidTransformPosition = boids[boidIndex].transform.position;
             const currentCellIndex = boidCell[boidIndex]
             const forward = forwards[boidIndex]
 
@@ -86,7 +84,7 @@ export class BoidsMasterController implements Updatable {
                 }
             }
 
-            let center = boid.transform.position;
+            let center = boids[boidIndex].transform.position;
             let coherenceAngle = 0;
             let separationAngle = 0
             let alignmentAngle = 0;
@@ -97,12 +95,12 @@ export class BoidsMasterController implements Updatable {
             for (let otherBoidIndex of boidIndicesInSurroundingCells){
                 if (otherBoidIndex == boidIndex) continue
                 
-                const otherBoid = boids[otherBoidIndex];
+                const otherBoidPosition = boids[otherBoidIndex].transform.position;
 
-                const offset = Vec3.subtract(otherBoid.transform.position, boid.transform.position);
+                const offset = Vec3.subtract(otherBoidPosition, boidTransformPosition);
                 const distanceSqrd = Vec3.dot(offset, offset)
-                if ( distanceSqrd < visualRangeSquared && distanceSqrd != 0) {
-                    center = Vec3.add(center, otherBoid.transform.position)
+                if ( distanceSqrd < visualRangeSquared) {
+                    center = Vec3.add(center, otherBoidPosition)
                     const distanceSqrdInverse = 1/distanceSqrd;
 
                     const separationToTarget = Vec3.scale(offset, distanceSqrdInverse)
@@ -135,7 +133,7 @@ export class BoidsMasterController implements Updatable {
             // average the center, the separation and alignment angle num of neighbours
             if (numOfNeighbours > 0){
                 center = Vec3.scale(center, 1/(numOfNeighbours + 1))
-                const coherenceToTarget = Vec3.normalise(Vec3.subtract(center, boid.transform.position))
+                const coherenceToTarget = Vec3.normalise(Vec3.subtract(center, boidTransformPosition))
                 const coherenceCrossY = forward.z * coherenceToTarget.x - forward.x * coherenceToTarget.z
     
                 if (Math.abs(coherenceCrossY) < EPS) {
@@ -153,11 +151,11 @@ export class BoidsMasterController implements Updatable {
             // keep in bound
             let desired = {x:0,y:0,z:0};
 
-            if (boid.transform.position.x < xBoidLowerBound) desired.x += 1;
-            else if (boid.transform.position.x > xBoidUpperBound) desired.x -= 1;
+            if (boidTransformPosition.x < xBoidLowerBound) desired.x += 1;
+            else if (boidTransformPosition.x > xBoidUpperBound) desired.x -= 1;
 
-            if (boid.transform.position.z < zBoidLowerBound) desired.z += 1;
-            else if (boid.transform.position.z > zBoidUpperBound) desired.z -= 1;
+            if (boidTransformPosition.z < zBoidLowerBound) desired.z += 1;
+            else if (boidTransformPosition.z > zBoidUpperBound) desired.z -= 1;
 
             if (desired.x != 0 || desired.z != 0) {
                 if (desired.x != 0 && desired.z != 0) {
@@ -193,7 +191,7 @@ const visualRangeSquared = visualRange * visualRange;
 // const visualRange = xBoidUpperBound / 40;
 
 const coherenceWeight = 1.5;
-const separationWeight = 0.5;
+const separationWeight = 1;
 const alignmentWeight = 1;
 const boundsWeight = 20;
 const dtCorrection = 50;
