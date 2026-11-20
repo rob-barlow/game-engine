@@ -48,6 +48,12 @@ const frontWallScale: Vec3 = {x: 2, y: 4, z: 1}
 const backWallOrientation: Matrix3 = minusZOrientation
 const backWallScale: Vec3 = {x: 2, y: 4, z: 1}
 
+const floorOrientation: Matrix3 = Matrix3.identity()
+const floorScale: Vec3 = {x: 2, y: 1, z: 2}
+
+const ceilingOrientation: Matrix3 = Matrix3.getRotationMatrix('x', Math.PI)
+const ceilingScale: Vec3 = {x: 2, y: 1, z: 2}
+
 function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
     const {seed, maze} = generateMaze(mazeWidth, mazeHeight);
 
@@ -59,21 +65,6 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
     let startPositionX = 0
     let startPositionZ = 0
 
-    // const floorPanelTransform: Transform = {
-    //     position: {x: 1, y: -0.01, z: 1},
-    //     orientation: Matrix3.identity(),
-    //     scale: {x: 2 * maze[0].length, y: 1, z: 2 * maze.length}
-    // }
-
-    // flatPanels.push(new Panel(floorPanelTransform, floorColour))
-    
-    // const ceilingPanelTransform: Transform = {
-    //     position: {x: 2 * maze[0].length - 1, y: 3.99, z: 1},
-    //     orientation: Matrix3.multiply(Matrix3.getRotationMatrix('z', Math.PI), Matrix3.identity()),
-    //     scale: {x: 2 * maze[0].length, y: 1, z: 2 * maze.length}
-    // }
-
-    // flatPanels.push(new Panel(ceilingPanelTransform, ceilingColour))
 
     // add walls
     for (let rowIndex = 0; rowIndex < maze.length; rowIndex++){
@@ -81,6 +72,23 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
             // x = row, z = column
             if (maze[rowIndex][columnIndex] == 0 || maze[rowIndex][columnIndex] == 2 || maze[rowIndex][columnIndex] == 3){
                 // add wall between this and all 1s
+                if (maze[rowIndex][columnIndex] != 3) {
+                    const transform: Transform = {
+                        position: {x: 2 * rowIndex, y: 0, z: 2 * columnIndex},
+                        orientation: floorOrientation,
+                        scale: floorScale
+                    }
+                    const panel = new Panel(transform, leftWallColour);
+                    flatPanels.push(panel);
+                }
+
+                const transform: Transform = {
+                    position: {x: 2 * rowIndex, y: 4, z: 2 * columnIndex + 2},
+                    orientation: ceilingOrientation,
+                    scale: ceilingScale
+                }
+                const panel = new Panel(transform, leftWallColour);
+                flatPanels.push(panel);
 
                 // left wall
                 if (maze[rowIndex - 1][columnIndex] == 1){
@@ -153,43 +161,6 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
             }
         }
     }
-
-    // for (let i = 0; i < panels.length; i++){
-    //     const panel = panels[i];
-    //     const orientation = panel.transform.orientation;
-
-    //     let adjacentPanelIndex = -1;
-        
-    //     // while (true){
-    //     //     adjacentPanelIndex = panels.findIndex(iterPanel => {
-    //     //         return (Matrix3.equals(iterPanel.transform.orientation, orientation)) &&  arePanelsAdjacent(panel, iterPanel) && panel != iterPanel;
-    //     //     })
-
-    //     //     if (adjacentPanelIndex == -1) break;
-
-    //     //     panels.splice(adjacentPanelIndex)
-    //     // }
-
-    //     // while (true) {
-    //     //     const adjacentPanelIndex = panels.findIndex(iterPanel =>
-    //     //         iterPanel !== panel &&
-    //     //         Matrix3.equals(iterPanel.transform.orientation, orientation) &&
-    //     //         arePanelsAdjacent(panel, iterPanel)
-    //     //     );
-
-    //     //     if (adjacentPanelIndex === -1) {
-    //     //         break;
-    //     //     }
-
-    //     //     const adjacentPanel = panels[adjacentPanelIndex];
-
-    //     //     // Expand panel to cover both panels
-    //     //     mergePanels(panel, adjacentPanel);
-
-    //     //     // Remove only the merged panel
-    //     //     panels.splice(adjacentPanelIndex, 1);
-    //     // }
-    // }
 
     panels.forEach(panel => {
         scene.add(panel)
