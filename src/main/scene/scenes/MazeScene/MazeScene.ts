@@ -6,6 +6,7 @@ import { Panel } from "../../game-objects/Panel";
 import { Scene } from "../../Scene";
 import { addPlayer } from "../Extensions";
 import { PostProcessingOptions } from "../../../rendering/gpu/PostProcessingOptions";
+import Texture from "../../../meshes/Textures/Textures";
 
 export function createMazeScene(): {scene: Scene, controllers: Controller[]} {
     const mazeWidth = 10;
@@ -14,7 +15,7 @@ export function createMazeScene(): {scene: Scene, controllers: Controller[]} {
     const scene = new Scene();
     scene.postProcessingOptions = [
         PostProcessingOptions.Flashlight,
-        PostProcessingOptions.Pixelation,
+        // PostProcessingOptions.Pixelation,
         PostProcessingOptions.Grayscale,
         // PostProcessingOptions.Kernel
     ]
@@ -72,23 +73,21 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
             // x = row, z = column
             if (maze[rowIndex][columnIndex] == 0 || maze[rowIndex][columnIndex] == 2 || maze[rowIndex][columnIndex] == 3){
                 // add wall between this and all 1s
-                if (maze[rowIndex][columnIndex] != 3) {
-                    const transform: Transform = {
-                        position: {x: 2 * rowIndex, y: 0, z: 2 * columnIndex},
-                        orientation: floorOrientation,
-                        scale: floorScale
-                    }
-                    const panel = new Panel(transform, leftWallColour);
-                    flatPanels.push(panel);
+                const floorTransform: Transform = {
+                    position: {x: 2 * rowIndex, y: 0, z: 2 * columnIndex},
+                    orientation: floorOrientation,
+                    scale: floorScale
                 }
+                const floorPanel = new Panel(floorTransform, floorColour);
+                flatPanels.push(floorPanel);
 
-                const transform: Transform = {
+                const ceilingTransform: Transform = {
                     position: {x: 2 * rowIndex, y: 4, z: 2 * columnIndex + 2},
                     orientation: ceilingOrientation,
                     scale: ceilingScale
                 }
-                const panel = new Panel(transform, leftWallColour);
-                flatPanels.push(panel);
+                const ceilingPanel = new Panel(ceilingTransform, ceilingColour);
+                flatPanels.push(ceilingPanel);
 
                 // left wall
                 if (maze[rowIndex - 1][columnIndex] == 1){
@@ -163,10 +162,14 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
     }
 
     panels.forEach(panel => {
+        // panel.texture = Texture.Water
         scene.add(panel)
     })
 
-    flatPanels.forEach(panel => {
+    flatPanels.filter(panel => {
+        return maze[panel.transform.position.x/2][panel.transform.position.z/2] != 3 || panel.transform.position.y > 0
+    }).forEach(panel => {
+        panel.texture = Texture.Ceiling
         scene.add(panel)
     })
 

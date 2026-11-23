@@ -92,6 +92,7 @@ export class GpuRenderer implements Renderer {
             console.log("SHIT")
         }
 
+        this.assetManager.loadTextures(this.gl)
     }
 
     public render(scene: Scene) {

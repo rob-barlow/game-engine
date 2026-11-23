@@ -1,5 +1,6 @@
 import { Transform, Vec3 } from "../../maths/index";
 import Mesh from "../../meshes/Mesh";
+import Texture from "../../meshes/Textures/Textures";
 import { GameObject } from "./GameObject";
 
 const panelVertices: [Vec3, Vec3, Vec3][] = [
@@ -19,5 +20,5 @@ export class Panel extends GameObject {
         this.mesh = new Mesh(panelVertices, colour);
     }
 
-    texture = "wall";
+    texture = Texture.Brick;
 }

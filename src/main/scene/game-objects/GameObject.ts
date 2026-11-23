@@ -2,6 +2,7 @@ import Collider from "../../collisions/Collider";
 import MovementSystem from "../../controls/in-game/movement-systems/MovementSystem";
 import { Transform } from "../../maths/index";
 import Mesh from "../../meshes/Mesh";
+import Texture from "../../meshes/Textures/Textures";
 
 export class GameObject {
     transform: Transform;
@@ -16,5 +17,5 @@ export class GameObject {
 
     movementSystem?: MovementSystem
 
-    texture?: string
+    texture: Texture = Texture.Plain
 }

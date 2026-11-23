@@ -6,12 +6,12 @@ import Rabbit from "../../../scene/game-objects/Rabbit";
 import { Letter } from "../../../scene/scenes/CvScene/game-objects/Letter";
 import { TextObject } from "../../../scene/scenes/CvScene/game-objects/TextObject";
 import { Transform } from "../../../maths/Transform";
-import { Matrix3, Matrix4 } from "../../../maths";
+import { Matrix4 } from "../../../maths";
 import GpuInstancingProgram from "../programs/GpuInstancingProgram";
 import RegularProgram from "../programs/RegularProgram";
 import { CanvasSize } from "../../../utils/types";
 import AssetManager from "../../../app/AssetManager";
-import { Boid } from "../../../scene/scenes/BoidsScene/game-objects/Boid";
+import Texture from "../../../meshes/Textures/Textures";
 
 const gpuInstancingBoundary = 9;
 
@@ -23,9 +23,9 @@ export default class GeometryPass implements Pass {
     gpuInstancingProgram: GpuInstancingProgram;
     regularProgram: RegularProgram;
 
-    wallTexture: WebGLTexture;
-    waterTexture: WebGLTexture;
-    plainTexture: WebGLTexture;
+    // wallTexture: WebGLTexture;
+    // waterTexture: WebGLTexture;
+    // plainTexture: WebGLTexture;
 
     textures: Map<string, WebGLTexture>
 
@@ -46,7 +46,7 @@ export default class GeometryPass implements Pass {
 
         this.gpuInstancingProgram.ext.vertexAttribDivisorANGLE(this.gpuInstancingProgram.colourAttributeLocation, 0);
 
-        this.loadTextures();
+        // this.loadTextures();
     }
 
     public render(scene: Scene) {
@@ -81,12 +81,6 @@ export default class GeometryPass implements Pass {
     
             for (const batch of batches.values()) {
                 if (batch.length > gpuInstancingBoundary){
-                    this.gl.activeTexture(this.gl.TEXTURE0);
-                    this.gl.bindTexture(this.gl.TEXTURE_2D, this.waterTexture);
-                    
-                    this.gl.activeTexture(this.gl.TEXTURE1);
-                    this.gl.bindTexture(this.gl.TEXTURE_2D, this.wallTexture);
-                    
                     this.gpuInstancingProgram.ext.vertexAttribDivisorANGLE(this.gpuInstancingProgram.colourAttributeLocation, 1);
                     this.instanceBatch(batch, viewMatrix);
                     this.gpuInstancingProgram.ext.vertexAttribDivisorANGLE(this.gpuInstancingProgram.colourAttributeLocation, 0);
@@ -102,21 +96,13 @@ export default class GeometryPass implements Pass {
         this.gpuInstancingProgram.ext.vertexAttribDivisorANGLE(this.gpuInstancingProgram.colourAttributeLocation, 1);
 
         this.gl.useProgram(this.gpuInstancingProgram.program);
+    
+        this.gl.activeTexture(this.gl.TEXTURE0);
+        const texture = this.assetManager.getTexture(batch[0].texture)
+        this.gl.bindTexture(this.gl.TEXTURE_2D, texture)
         
-        if (batch[0].texture){
-            this.gl.activeTexture(this.gl.TEXTURE0);
-            this.gl.bindTexture(this.gl.TEXTURE_2D, this.waterTexture)
-            
-            this.gl.activeTexture(this.gl.TEXTURE1);
-            this.gl.bindTexture(this.gl.TEXTURE_2D, this.wallTexture)
-        }
-        else {
-            this.gl.activeTexture(this.gl.TEXTURE0);
-            this.gl.bindTexture(this.gl.TEXTURE_2D, this.plainTexture)
-            
-            this.gl.activeTexture(this.gl.TEXTURE1);
-            this.gl.bindTexture(this.gl.TEXTURE_2D, this.plainTexture)
-        }
+            // this.gl.activeTexture(this.gl.TEXTURE1);
+            // this.gl.bindTexture(this.gl.TEXTURE_2D, this.wallTexture)
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.positionBuffer);
         this.gl.vertexAttribPointer(this.gpuInstancingProgram.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
@@ -299,93 +285,5 @@ export default class GeometryPass implements Pass {
             this.gl.drawArrays(this.gl.TRIANGLES, 0, vertices.length/3)
             vertices.length = 0;
         }
-    }
-    
-    loadTexture(url: string) {
-        const texture = this.gl.createTexture();
-        this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-
-        // Because images have to be downloaded over the internet
-        // they might take a moment until they are ready.
-        // Until then put a single pixel in the texture so we can
-        // use it immediately. When the image has finished downloading
-        // we'll update the texture with the contents of the image.
-        const level = 0;
-        const internalFormat = this.gl.RGBA;
-        const srcFormat = this.gl.RGBA;
-        const srcType = this.gl.UNSIGNED_BYTE;
-      
-        const image =  this.assetManager.getImage(url);
-
-        this.gl.texImage2D(
-            this.gl.TEXTURE_2D,
-            level,
-            internalFormat,
-            srcFormat,
-            srcType,
-            image,
-        );
-
-        // WebGL1 has different requirements for power of 2 images
-        // vs. non power of 2 images so check if the image is a
-        // power of 2 in both dimensions.
-        if (this.isPowerOf2(image.width) && this.isPowerOf2(image.height)) {
-            // Yes, it's a power of 2. Generate mips.
-            this.gl.generateMipmap(this.gl.TEXTURE_2D);
-        } 
-        else {
-            // No, it's not a power of 2. Turn off mips and set
-            // wrapping to clamp to edge
-            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
-        }
-
-        return texture;
-    }
-
-    loadTextures() {
-        this.textures = new Map<string, WebGLTexture>();
-        this.textures.set("uWaterTexture", 0);
-
-        this.gl.activeTexture(this.gl.TEXTURE0);
-        const waterImageUrl = "./water.jpg";
-        this.waterTexture = this.loadTexture(waterImageUrl);
-
-        this.gl.activeTexture(this.gl.TEXTURE1);
-        const wallImageUrl = "./cave-wall.webp";
-        this.wallTexture = this.loadTexture(wallImageUrl);
-
-        this.gl.uniform1i(this.gl.getUniformLocation(this.gpuInstancingProgram.program, "uWaterTexture"), 0)
-        this.gl.uniform1i(this.gl.getUniformLocation(this.gpuInstancingProgram.program, "uBrickTexture"), 1)
-
-        
-        // Plain texture stuff
-        this.plainTexture = this.gl.createTexture();
-        this.gl.bindTexture(this.gl.TEXTURE_2D,  this.plainTexture);
-
-        const level = 0;
-        const internalFormat = this.gl.RGBA;
-        const width = 1;
-        const height = 1;
-        const border = 0;
-        const srcFormat = this.gl.RGBA;
-        const srcType = this.gl.UNSIGNED_BYTE;
-        const pixel = new Uint8Array([255, 255, 255, 255]);
-        this.gl.texImage2D(
-            this.gl.TEXTURE_2D,
-            level,
-            internalFormat,
-            width,
-            height,
-            border,
-            srcFormat,
-            srcType,
-            pixel,
-        );
-    }
-
-    isPowerOf2(value: number) {
-        return (value & (value - 1)) === 0;
     }
 }
