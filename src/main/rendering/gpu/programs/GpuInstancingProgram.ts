@@ -23,19 +23,19 @@ class GpuInstancingProgram {
     regularProgram: WebGLProgram;
     program: WebGLProgram;
 
-    gl: WebGLRenderingContext;
-    ext: ANGLE_instanced_arrays;
+    gl: WebGL2RenderingContext;
     size: CanvasSize;
     
-    constructor(gl : WebGLRenderingContext, size: CanvasSize){
+    constructor(gl : WebGL2RenderingContext, size: CanvasSize){
         this.gl = gl;
         this.size = size;
 
-        this.ext = this.gl.getExtension('ANGLE_instanced_arrays');
-        if (!this.ext) {
-            console.log("Cannot use GPU instancing")
-            alert('need ANGLE_instanced_arrays');
-        }
+        // this.ext = this.gl.getExtension('ANGLE_instanced_arrays');
+
+        // if (!this.ext) {
+        //     console.log("Cannot use GPU instancing")
+        //     alert('need ANGLE_instanced_arrays');
+        // }
 
         const vertexShader = createShader(this.gl, this.gl.VERTEX_SHADER, gpuInstancingVertexShaderSource) as WebGLShader;
         const fragmentShader = createShader(this.gl, this.gl.FRAGMENT_SHADER, fragmentShaderSource) as WebGLShader;
@@ -82,7 +82,7 @@ class GpuInstancingProgram {
                 offset,           // offset in buffer
             );
             // this line says this attribute only changes for each 1 instance
-            this.ext.vertexAttribDivisorANGLE(loc, 1);
+            this.gl.vertexAttribDivisor(loc, 1)
         }
 
         // just allocate the buffer
@@ -94,7 +94,7 @@ class GpuInstancingProgram {
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.colourBuffer);
         this.gl.enableVertexAttribArray(this.colourAttributeLocation);
         this.gl.vertexAttribPointer(this.colourAttributeLocation, 4, this.gl.FLOAT, false, 0, 0);
-        this.ext.vertexAttribDivisorANGLE(this.colourAttributeLocation, 1);
+        this.gl.vertexAttribDivisor(this.colourAttributeLocation, 1);
 
         const textureCoordinates = [
             0.0, 0.0,

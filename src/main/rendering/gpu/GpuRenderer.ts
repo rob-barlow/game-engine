@@ -11,7 +11,7 @@ export class GpuRenderer implements Renderer {
     size: CanvasSize;
     assetManager: AssetManager;
 
-    gl: WebGLRenderingContext;
+    gl: WebGL2RenderingContext;
 
     geometryPass: GeometryPass;
 
@@ -43,7 +43,7 @@ export class GpuRenderer implements Renderer {
             height: canvas.height
         };
 
-        this.gl = canvas.getContext("webgl") as WebGLRenderingContext;
+        this.gl = canvas.getContext("webgl2") as WebGL2RenderingContext;
         console.log("version: "+ this.gl.getParameter(this.gl.SHADING_LANGUAGE_VERSION))
         
         this.geometryPass = new GeometryPass(this.gl, this.size, this.assetManager);

@@ -17,7 +17,7 @@ const gpuInstancingBoundary = 9;
 
 export default class GeometryPass implements Pass {
     size: CanvasSize;
-    gl: WebGLRenderingContext;
+    gl: WebGL2RenderingContext;
     assetManager: AssetManager;
     
     gpuInstancingProgram: GpuInstancingProgram;
@@ -29,7 +29,7 @@ export default class GeometryPass implements Pass {
 
     textures: Map<string, WebGLTexture>
 
-    constructor(gl: WebGLRenderingContext, size: CanvasSize, assetManager: AssetManager){
+    constructor(gl: WebGL2RenderingContext, size: CanvasSize, assetManager: AssetManager){
         this.gl = gl;
         this.size = size;
         this.assetManager = assetManager;
@@ -43,10 +43,6 @@ export default class GeometryPass implements Pass {
         this.gl.vertexAttribPointer(this.gpuInstancingProgram.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
         
         this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
-
-        this.gpuInstancingProgram.ext.vertexAttribDivisorANGLE(this.gpuInstancingProgram.colourAttributeLocation, 0);
-
-        // this.loadTextures();
     }
 
     public render(scene: Scene) {
@@ -81,9 +77,9 @@ export default class GeometryPass implements Pass {
     
             for (const batch of batches.values()) {
                 if (batch.length > gpuInstancingBoundary){
-                    this.gpuInstancingProgram.ext.vertexAttribDivisorANGLE(this.gpuInstancingProgram.colourAttributeLocation, 1);
+                    this.gl.vertexAttribDivisor(this.gpuInstancingProgram.colourAttributeLocation, 1);
                     this.instanceBatch(batch, viewMatrix);
-                    this.gpuInstancingProgram.ext.vertexAttribDivisorANGLE(this.gpuInstancingProgram.colourAttributeLocation, 0);
+                    this.gl.vertexAttribDivisor(this.gpuInstancingProgram.colourAttributeLocation, 0);
 
                 }
                 else {
@@ -93,7 +89,7 @@ export default class GeometryPass implements Pass {
     }
     
     instanceBatch(batch: GameObject[], viewMatrix: Matrix4){
-        this.gpuInstancingProgram.ext.vertexAttribDivisorANGLE(this.gpuInstancingProgram.colourAttributeLocation, 1);
+        this.gl.vertexAttribDivisor(this.gpuInstancingProgram.colourAttributeLocation, 1);
 
         this.gl.useProgram(this.gpuInstancingProgram.program);
     
@@ -157,12 +153,14 @@ export default class GeometryPass implements Pass {
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colours.map(v => v/255)), this.gl.STATIC_DRAW);
 
         
-        this.gpuInstancingProgram.ext.drawArraysInstancedANGLE(
+        this.gl.drawArraysInstanced(
             this.gl.TRIANGLES,
             0,             // offset
             meshVertices.length / 3,   // num vertices per instance
             worldMatrices.length,  // num instances
         );
+
+                    this.gl.vertexAttribDivisor(this.gpuInstancingProgram.colourAttributeLocation, 0);
 
         // if (batch[0] instanceof Boid){
         //     for (let i = 0; i < numInstances; i++){
