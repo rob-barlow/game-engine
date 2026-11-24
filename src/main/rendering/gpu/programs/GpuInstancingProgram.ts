@@ -30,13 +30,6 @@ class GpuInstancingProgram {
         this.gl = gl;
         this.size = size;
 
-        // this.ext = this.gl.getExtension('ANGLE_instanced_arrays');
-
-        // if (!this.ext) {
-        //     console.log("Cannot use GPU instancing")
-        //     alert('need ANGLE_instanced_arrays');
-        // }
-
         const vertexShader = createShader(this.gl, this.gl.VERTEX_SHADER, gpuInstancingVertexShaderSource) as WebGLShader;
         const fragmentShader = createShader(this.gl, this.gl.FRAGMENT_SHADER, fragmentShaderSource) as WebGLShader;
         this.program = createProgram(this.gl, vertexShader, fragmentShader) as WebGLProgram;
@@ -136,35 +129,37 @@ class GpuInstancingProgram {
 
 export default GpuInstancingProgram;
 
-const gpuInstancingVertexShaderSource = `
-    attribute vec4 aVertexPosition;
-    attribute vec4 aVertexColour;
-    attribute vec2 aTextureCoord;
+const gpuInstancingVertexShaderSource = `#version 300 es
+    layout( location = 0 ) in vec4 aVertexPosition;
+    layout( location = 1 ) in vec4 aVertexColour;
+    layout( location = 2 ) in vec2 aTextureCoord;
 
-    attribute mat4 worldMatrix;
+    layout( location = 3 ) in mat4 worldMatrix;
     uniform mat4 viewMatrix;
     uniform mat4 projectionMatrix;
 
-    varying lowp vec4 vColour;
-    varying highp vec2 vTextureCoord;
+    out lowp vec4 vColour;
+    out highp vec3 vTextureCoord;
 
     void main() {
         gl_Position = projectionMatrix * viewMatrix * worldMatrix * aVertexPosition;
         vColour = aVertexColour;
-        vTextureCoord = aTextureCoord;
+        vTextureCoord = vec3(aTextureCoord, 0);
     }
 `;
 
-const fragmentShaderSource = `
+const fragmentShaderSource = `#version 300 es
     precision highp float;
+    precision lowp sampler2DArray;
 
-    varying lowp vec4 vColour;
-    varying highp vec2 vTextureCoord;
+    in lowp vec4 vColour;
+    in highp vec3 vTextureCoord;
 
-    uniform sampler2D uTexture;
+    uniform highp sampler2DArray uTexture;
 
+    out vec4 fragColor;
     void main() {
-        gl_FragColor = mix(vColour, texture2D(uTexture, vTextureCoord), 0.9);
+        fragColor = mix(vColour, texture(uTexture, vTextureCoord), 0.5);
     }
 `;
 
