@@ -23,11 +23,7 @@ export default class GeometryPass implements Pass {
     gpuInstancingProgram: GpuInstancingProgram;
     regularProgram: RegularProgram;
 
-    // wallTexture: WebGLTexture;
-    // waterTexture: WebGLTexture;
-    // plainTexture: WebGLTexture;
-
-    textures: Map<string, WebGLTexture>
+    textureArray: WebGLTexture;
 
     constructor(gl: WebGL2RenderingContext, size: CanvasSize, assetManager: AssetManager){
         this.gl = gl;
@@ -42,7 +38,9 @@ export default class GeometryPass implements Pass {
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.positionBuffer);
         this.gl.vertexAttribPointer(this.gpuInstancingProgram.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
         
-        this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
+        // this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
+        
+        this.createTextureArray();
     }
 
     public render(scene: Scene) {
@@ -77,10 +75,7 @@ export default class GeometryPass implements Pass {
     
             for (const batch of batches.values()) {
                 if (batch.length > gpuInstancingBoundary){
-                    this.gl.vertexAttribDivisor(this.gpuInstancingProgram.colourAttributeLocation, 1);
                     this.instanceBatch(batch, viewMatrix);
-                    this.gl.vertexAttribDivisor(this.gpuInstancingProgram.colourAttributeLocation, 0);
-
                 }
                 else {
                     this.renderBatch(batch, viewMatrix);
@@ -90,16 +85,12 @@ export default class GeometryPass implements Pass {
     
     instanceBatch(batch: GameObject[], viewMatrix: Matrix4){
         this.gl.vertexAttribDivisor(this.gpuInstancingProgram.colourAttributeLocation, 1);
+        this.gl.vertexAttribDivisor(this.gpuInstancingProgram.textureIndexAttributeLocation, 1);
 
         this.gl.useProgram(this.gpuInstancingProgram.program);
     
-        this.gl.activeTexture(this.gl.TEXTURE0);
-        const texture = this.assetManager.getTexture(batch[0].texture)
-        this.gl.bindTexture(this.gl.TEXTURE_2D, texture)
+        this.gl.bindTexture(this.gl.TEXTURE_2D_ARRAY, this.textureArray)
         
-            // this.gl.activeTexture(this.gl.TEXTURE1);
-            // this.gl.bindTexture(this.gl.TEXTURE_2D, this.wallTexture)
-
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.positionBuffer);
         this.gl.vertexAttribPointer(this.gpuInstancingProgram.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
 
@@ -116,9 +107,11 @@ export default class GeometryPass implements Pass {
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(meshVertices), this.gl.STATIC_DRAW);
 
         this.gpuInstancingProgram.setUniformMatrix(this.gpuInstancingProgram.viewMatrixUniformLocation, viewMatrix);
+        
 
         const worldMatrices: Matrix4[] = [];
         const colours: number[] = [];
+        const textureIndices: number[] = [];
 
         for (let batchIndex = 0; batchIndex < batch.length; batchIndex++){
             const currentGameObject = batch[batchIndex];
@@ -126,6 +119,7 @@ export default class GeometryPass implements Pass {
             const worldMatrix = Transform.getWorldMatrix(currentGameObject.transform);
             worldMatrices.push(worldMatrix);
             colours.push(...currentGameObject.mesh.colour, 255);
+            textureIndices.push(currentGameObject.texture)
         }
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.worldMatrixBuffer)
@@ -152,7 +146,11 @@ export default class GeometryPass implements Pass {
         this.gl.vertexAttribPointer(this.gpuInstancingProgram.colourAttributeLocation, 4, this.gl.FLOAT, false, 0, 0);
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(colours.map(v => v/255)), this.gl.STATIC_DRAW);
 
-        
+        // set texture indices
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.textureIndexBuffer);
+        this.gl.vertexAttribPointer(this.gpuInstancingProgram.textureIndexAttributeLocation, 1, this.gl.FLOAT, false, 0, 0);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(textureIndices), this.gl.STATIC_DRAW);
+
         this.gl.drawArraysInstanced(
             this.gl.TRIANGLES,
             0,             // offset
@@ -160,103 +158,8 @@ export default class GeometryPass implements Pass {
             worldMatrices.length,  // num instances
         );
 
-                    this.gl.vertexAttribDivisor(this.gpuInstancingProgram.colourAttributeLocation, 0);
-
-        // if (batch[0] instanceof Boid){
-        //     for (let i = 0; i < numInstances; i++){
-        //         const currentBoid = batch[i]
-
-        //         const mesh = [
-        //             0.45,0,0.2,
-        //             0.45,0,2,
-        //             0.55,0,2,
-        //             0.45,0,0.2,
-        //             0.55,0,2,
-        //             0.55,0,0.2,
-        //         ]
-
-        //         const triangles = [
-        //             [
-        //                 {x: 0.45, y: 0, z: 0.2},
-        //                 {x: 0.45, y: 0, z: 2},
-        //                 {x: 0.55, y: 0, z: 2},
-        //             ],
-        //             [
-        //                 {x: 0.45, y: 0, z: 0.2},
-        //                 {x: 0.55, y: 0, z: 2},
-        //                 {x: 0.55, y: 0, z: 0.2},
-        //             ]
-        //             ]
-
-        //         this.gl.useProgram(this.regularProgram.program);
-        //         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.regularProgram.positionBuffer);
-        //         this.gl.vertexAttribPointer(this.regularProgram.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
-
-        //         this.gl.uniformMatrix4fv(this.regularProgram.viewMatrixUniformLocation, false, Matrix4.toGlslArray(viewMatrix))
-                        
-        //         const vertices: number[] = []
-                
-        //             const worldMatrix = Transform.getWorldMatrix(currentBoid.transform)
-        //             this.gl.uniform3fv(this.regularProgram.colourUniformLocation, [1,1,1]);
-        //             this.gl.uniformMatrix4fv(this.regularProgram.worldMatrixUniformLocation, false, Matrix4.toGlslArray(worldMatrix))
-                    
-        //             for (const triangle of triangles){
-        //                 for (const vertex of triangle){
-        //                     const angle = (batch[i] as Boid).angle
-        //                     const m: Matrix3 = [
-        //                         [Math.cos(angle), 0, Math.sin(angle)],
-        //                         [0, 1, 0],
-        //                         [-Math.sin(angle), 0, Math.cos(angle)],
-        //                     ]
-
-        //                     const currentTriangle = Matrix3.apply(m, vertex)
-        //                     vertices.push(currentTriangle.x, currentTriangle.y, currentTriangle.z)
-        //                 }
-        //             }
-
-        //         // vertices.push(...mesh)
-
-        //         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW)
-
-        //         this.gl.drawArrays(this.gl.TRIANGLES, 0, vertices.length)
-        //     }
-        // //     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.positionBuffer);
-        // //     const arrowVertices = [0.5, 2, 0, 0.5, 2, 2.5]
-        // //     this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(arrowVertices), this.gl.STATIC_DRAW)
-
-        // //     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.worldMatrixBuffer)
-
-        // //     for (let i = 0; i < numInstances; i++){
-        // //         const angle = (batch[i] as Boid).angle
-        // //         const m: Matrix4 = [
-        // //             [Math.cos(angle), 0, Math.sin(angle), 0],
-        // //             [0, 1, 0, 0],
-        // //             [-Math.sin(angle), 0, Math.cos(angle), 0],
-        // //             [0, 0, 0, 1],
-        // //     ]
-        // //         const glslMatrix = Matrix4.toGlslArray(Matrix4.multiply(worldMatrices[i], m));
-        // //         for (let j = 0; j < 16; j++){
-        // //             this.gpuInstancingProgram.matrices[i][j] = glslMatrix[j];
-        // //         }
-        // //     };
-
-        // //     this.gl.bufferData(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.matrixData.byteLength, this.gl.DYNAMIC_DRAW);
-        // //     this.gl.bufferSubData(this.gl.ARRAY_BUFFER, 0, this.gpuInstancingProgram.matrixData);
-
-        // //     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.colourBuffer);
-        // //     this.gl.vertexAttribPointer(this.gpuInstancingProgram.colourAttributeLocation, 4, this.gl.FLOAT, false, 0, 0);
-        // //     const arrowColours = new Array(numInstances * 4).fill(1)
-
-        // //     this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(arrowColours), this.gl.STATIC_DRAW);
-
-        // //     this.gl.lineWidth(20);
-        // //     this.gpuInstancingProgram.ext.drawArraysInstancedANGLE(
-        // //     this.gl.LINES,
-        // //     0,             // offset
-        // //     2,   // num vertices per instance
-        // //     worldMatrices.length,  // num instances
-        // // );
-        // }
+        this.gl.vertexAttribDivisor(this.gpuInstancingProgram.colourAttributeLocation, 0);
+        this.gl.vertexAttribDivisor(this.gpuInstancingProgram.textureIndexAttributeLocation, 0);
     }
 
     renderBatch(batch: GameObject[], viewMatrix: Matrix4){
@@ -283,5 +186,76 @@ export default class GeometryPass implements Pass {
             this.gl.drawArrays(this.gl.TRIANGLES, 0, vertices.length/3)
             vertices.length = 0;
         }
+    }
+
+    createTextureArray(){
+        this.textureArray = this.gl.createTexture();
+
+        this.gl.bindTexture( this.gl.TEXTURE_2D_ARRAY , this.textureArray);
+        this.gl.texParameteri( this.gl.TEXTURE_2D_ARRAY , this.gl.TEXTURE_MIN_FILTER , this.gl.LINEAR);
+        this.gl.texParameteri( this.gl.TEXTURE_2D_ARRAY , this.gl.TEXTURE_MAG_FILTER , this.gl.LINEAR);
+        this.gl.texParameteri( this.gl.TEXTURE_2D_ARRAY , this.gl.TEXTURE_WRAP_S , this.gl.CLAMP_TO_EDGE);
+        this.gl.texParameteri( this.gl.TEXTURE_2D_ARRAY , this.gl.TEXTURE_WRAP_T , this.gl.CLAMP_TO_EDGE);
+
+        const waterImage = this.assetManager.imageMap.get("./water.webp")
+        const panelImage = this.assetManager.imageMap.get("./ceiling-tiles.webp")
+        const caveWallImage = this.assetManager.imageMap.get("./cave-wall.webp")
+        const brickWallImage = this.assetManager.imageMap.get("./brick-wall.webp")
+        
+        const numOfTextures = 5;
+
+        // allocate storage
+        this.gl.texStorage3D( this.gl.TEXTURE_2D_ARRAY , 1 , this.gl.RGBA8 , waterImage.width , waterImage.height , numOfTextures);
+
+        // tell webgl how wide the image is so it can correctly get sub areas of the image
+        this.gl.pixelStorei( this.gl.UNPACK_ROW_LENGTH , waterImage.width );
+
+        const waterIndex = Texture.Water
+        const waterBuffer = this.getImageData(waterImage)
+        this.gl.texSubImage3D( this.gl.TEXTURE_2D_ARRAY , 0 , 0 , 0 , waterIndex, 
+                    waterImage.width , waterImage.height , 1 , this.gl.RGBA , this.gl.UNSIGNED_BYTE , 
+                    waterBuffer , 0); 
+
+        const panelIndex = Texture.Ceiling
+        const panelBuffer = this.getImageData(panelImage)
+        this.gl.texSubImage3D( this.gl.TEXTURE_2D_ARRAY , 0 , 0 , 0 , panelIndex, 
+                    panelImage.width , waterImage.height , 1 , this.gl.RGBA , this.gl.UNSIGNED_BYTE , 
+                    panelBuffer , 0); 
+
+        const caveWallIndex = Texture.CaveWall
+        const caveWallBuffer = this.getImageData(caveWallImage)
+        this.gl.texSubImage3D( this.gl.TEXTURE_2D_ARRAY , 0 , 0 , 0 , caveWallIndex, 
+                    caveWallImage.width , caveWallImage.height , 1 , this.gl.RGBA , this.gl.UNSIGNED_BYTE , 
+                    caveWallBuffer , 0); 
+                
+        const brickWallIndex = Texture.Brick
+        const brickWallBuffer = this.getImageData(brickWallImage)
+        this.gl.texSubImage3D( this.gl.TEXTURE_2D_ARRAY , 0 , 0 , 0 , brickWallIndex, 
+                    brickWallImage.width , waterImage.height , 1 , this.gl.RGBA , this.gl.UNSIGNED_BYTE , 
+                    brickWallBuffer , 0); 
+
+        const plainIndex = Texture.Plain
+        let canvas = new OffscreenCanvas( waterImage.width , waterImage.height );
+        let ctx = canvas.getContext( "2d" );
+        ctx.fillStyle = "grey"
+        ctx.fillRect(0 , 0 , canvas.width , canvas.height)
+        let plainBuffer = ctx.getImageData( 0 , 0 , canvas.width , canvas.height ).data;
+        this.gl.texSubImage3D( this.gl.TEXTURE_2D_ARRAY , 0 , 0 , 0 , plainIndex, 
+                    brickWallImage.width , waterImage.height , 1 , this.gl.RGBA , this.gl.UNSIGNED_BYTE , 
+                    plainBuffer , 0); 
+
+        // reset unpack row length to its default value
+        this.gl.pixelStorei( this.gl.UNPACK_ROW_LENGTH , 0 );
+    }
+
+    getImageData(image: HTMLImageElement){
+        let canvas = new OffscreenCanvas( image.width , image.height );
+        let ctx = canvas.getContext( "2d" );
+
+        ctx.drawImage( image , 0 , 0 );
+
+        let imageData = ctx.getImageData( 0 , 0 , canvas.width , canvas.height ).data;
+        
+        return new Uint8Array( imageData );
     }
 }

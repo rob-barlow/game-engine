@@ -4,7 +4,7 @@ export default class AssetManager {
     imageMap: Map<string, HTMLImageElement>
     textures: Map<Texture, WebGLTexture> = new Map<Texture, WebGLTexture>()
 
-    textureUrls = ["./cave-wall.webp", "./water.jpg", "./ceiling-tiles.webp", "./brick-wall.jpg"];
+    textureUrls = ["./cave-wall.webp", "./water.webp", "./ceiling-tiles.webp", "./brick-wall.webp"];
 
     constructor(){
         this.load();
@@ -74,7 +74,7 @@ export default class AssetManager {
     }
 
     loadTextures(gl: WebGLRenderingContext) {
-        const waterTexture = this.loadTexture(gl, "./water.jpg");
+        const waterTexture = this.loadTexture(gl, "./water.webp");
         this.textures.set(Texture.Water, waterTexture);
 
         const caveWallTexture = this.loadTexture(gl, "./cave-wall.webp");
@@ -83,7 +83,7 @@ export default class AssetManager {
         const ceilingTexture = this.loadTexture(gl, "./ceiling-tiles.webp");
         this.textures.set(Texture.Ceiling, ceilingTexture);
 
-        const brickTexture = this.loadTexture(gl, "./brick-wall.jpg");
+        const brickTexture = this.loadTexture(gl, "./brick-wall.webp");
         this.textures.set(Texture.Brick, brickTexture);
 
         // Plain texture stuff
@@ -111,7 +111,6 @@ export default class AssetManager {
         );
 
         this.textures.set(Texture.Plain, plainTexture);
-
     }
 
     isPowerOf2(value: number) {

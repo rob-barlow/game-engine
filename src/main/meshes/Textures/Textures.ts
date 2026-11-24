@@ -1,9 +1,9 @@
 enum Texture {
     Water,
     CaveWall,
-    Plain,
     Ceiling,
-    Brick
+    Brick,
+    Plain
 }
 
 export default Texture;
