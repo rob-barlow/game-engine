@@ -1,6 +1,6 @@
 import Collider from "../../collisions/Collider";
 import MovementSystem from "../../controls/in-game/movement-systems/MovementSystem";
-import { Transform } from "../../maths/index";
+import { Transform, Vec3 } from "../../maths/index";
 import Mesh from "../../meshes/Mesh";
 import Texture from "../../meshes/Textures/Textures";
 
@@ -18,4 +18,6 @@ export class GameObject {
     movementSystem?: MovementSystem
 
     texture: Texture = Texture.Plain
+
+    normal?: Vec3
 }

@@ -7,6 +7,7 @@ class GpuInstancingProgram {
     worldMatrixBuffer: WebGLBuffer
     textureCoordBuffer: WebGLBuffer
     textureIndexBuffer: WebGLBuffer
+    normalBuffer: WebGLBuffer
 
     projectionMatrix: Matrix4
 
@@ -15,10 +16,12 @@ class GpuInstancingProgram {
     worldMatrixAttributeLocation: number;
     textureCoordAttributeLocation: number;
     textureIndexAttributeLocation: number;
+    normalAttributeLocation: number;
 
     viewMatrixUniformLocation: WebGLUniformLocation;
     projectionMatrixUniformLocation: WebGLUniformLocation;
     lightColourUniformLocation: WebGLUniformLocation;
+    lightPositionUniformLocation: WebGLUniformLocation;
 
     matrixData: Float32Array
     matrices: Float32Array[]
@@ -44,13 +47,16 @@ class GpuInstancingProgram {
         this.worldMatrixAttributeLocation = this.gl.getAttribLocation(this.program, 'worldMatrix');
         this.textureCoordAttributeLocation = this.gl.getAttribLocation(this.program, 'aTextureCoord');
         this.textureIndexAttributeLocation = this.gl.getAttribLocation(this.program, 'aTextureIndex');
+        this.normalAttributeLocation = this.gl.getAttribLocation(this.program, 'aNormal');
 
         this.viewMatrixUniformLocation = this.gl.getUniformLocation(this.program, "viewMatrix");
         this.projectionMatrixUniformLocation = this.gl.getUniformLocation(this.program, "projectionMatrix");
         this.lightColourUniformLocation = this.gl.getUniformLocation(this.program, "lightColour");
+        this.lightPositionUniformLocation = this.gl.getUniformLocation(this.program, "lightPosition");
 
         this.setUniformMatrix(this.projectionMatrixUniformLocation, Transform.getProjectionMatrix(this.size))
         this.gl.uniform3f(this.lightColourUniformLocation, 1.0, 1.0, 1.0)
+        this.gl.uniform3f(this.lightPositionUniformLocation, 0.0, 0.0, 0.0)
         
         // position buffer
         this.positionBuffer = this.gl.createBuffer();
@@ -87,6 +93,11 @@ class GpuInstancingProgram {
         // just allocate the buffer
         this.gl.bufferData(this.gl.ARRAY_BUFFER, this.matrixData.byteLength, this.gl.DYNAMIC_DRAW);
 
+        this.normalBuffer = this.gl.createBuffer();
+
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normalBuffer);
+        this.gl.enableVertexAttribArray(this.normalAttributeLocation);
+        this.gl.vertexAttribPointer(this.normalAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
         
         this.textureIndexBuffer = this.gl.createBuffer();
 
@@ -146,24 +157,26 @@ const gpuInstancingVertexShaderSource = `#version 300 es
     layout( location = 1 ) in vec4 aVertexColour;
     layout( location = 2 ) in vec2 aTextureCoord;
     layout( location = 3 ) in float aTextureIndex;
-
-    layout( location = 4 ) in mat4 worldMatrix;
+    layout( location = 4 ) in vec3 aNormal;
+    layout( location = 5 ) in mat4 worldMatrix;
+    
     uniform mat4 viewMatrix;
     uniform mat4 projectionMatrix;
+    uniform vec3 lightPosition;
 
     out lowp vec4 vColour;
     out highp vec3 vTextureCoord;
+    out highp float vNormalDot;
 
     void main() {
         gl_Position = projectionMatrix * viewMatrix * worldMatrix * aVertexPosition;
         vColour = aVertexColour;
-        if (int(aTextureIndex) == 2){
-            vTextureCoord = vec3(vec2(0.25, 0.25) + 0.5 * aTextureCoord, aTextureIndex);
-        }
-        else {
-            vTextureCoord = vec3(aTextureCoord, aTextureIndex);
-        }
+        vec3 lightDirection = lightPosition - vec3(worldMatrix * aVertexPosition);
+        float lightDistance = length(lightDirection);
+        float lightStrength = 2.0 / (lightDistance * lightDistance);
+        vNormalDot = dot(normalize(lightDirection), aNormal)  * lightStrength;
         
+        vTextureCoord = vec3(aTextureCoord, aTextureIndex);
     }
 `;
 
@@ -173,6 +186,7 @@ const fragmentShaderSource = `#version 300 es
 
     in lowp vec4 vColour;
     in highp vec3 vTextureCoord;
+    in highp float vNormalDot;
 
     uniform vec3 lightColour;
     uniform highp sampler2DArray uTexture;
@@ -180,8 +194,10 @@ const fragmentShaderSource = `#version 300 es
     out vec4 fragColor;
     void main() {
         float ambientStrength = 0.1;
-        vec3 ambient = ambientStrength * lightColour;
-        vec4 colour = vColour * vec4(ambient, 1.0);
+        float actualStrength = vNormalDot > 0.0 ? mix(ambientStrength, 1.0, vNormalDot) : ambientStrength;
+
+        vec4 ambient = vec4(actualStrength * lightColour, 1.0);
+        vec4 colour = vColour * ambient;
         fragColor = mix(colour, texture(uTexture, vTextureCoord), 0.0);
     }
 `;
@@ -209,3 +225,5 @@ function createProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fra
    }
    return program;
 }
+
+// vec4 colour = vColour * ambient;

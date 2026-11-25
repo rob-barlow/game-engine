@@ -21,4 +21,5 @@ export class Panel extends GameObject {
     }
 
     texture = Texture.Brick;
+    normal = {x: 0, y: 1, z: 0}
 }

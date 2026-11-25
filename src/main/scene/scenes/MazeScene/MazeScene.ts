@@ -158,7 +158,7 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
 
                 // add light cube here
                 const transform: Transform = {
-                    position: {x: 2 * rowIndex + 1/2, y: 1, z: 2 * columnIndex + 1/2},
+                    position: {x: 2 * rowIndex + 1, y: 1.5, z: 2 * columnIndex + 1},
                     orientation: Matrix3.identity(),
                     scale: {x: 1, y: 1, z: 1}
                 }

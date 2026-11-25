@@ -6,7 +6,7 @@ import Rabbit from "../../../scene/game-objects/Rabbit";
 import { Letter } from "../../../scene/scenes/CvScene/game-objects/Letter";
 import { TextObject } from "../../../scene/scenes/CvScene/game-objects/TextObject";
 import { Transform } from "../../../maths/Transform";
-import { Matrix4 } from "../../../maths";
+import { Matrix3, Matrix4, Vec3 } from "../../../maths";
 import GpuInstancingProgram from "../programs/GpuInstancingProgram";
 import RegularProgram from "../programs/RegularProgram";
 import { CanvasSize } from "../../../utils/types";
@@ -16,6 +16,7 @@ import LightCube from "../../../scene/game-objects/LightCube";
 import LightSourceProgram from "../programs/LightSourceProgram";
 
 const gpuInstancingBoundary = 9;
+const lightColour = [1,1,1]
 
 export default class GeometryPass implements Pass {
     size: CanvasSize;
@@ -66,6 +67,11 @@ export default class GeometryPass implements Pass {
                 if (gameObj instanceof Rabbit) key = "rabbit"
                 if (gameObj instanceof Letter) key = "letter"
                 if (gameObj instanceof TextObject) key = "text"
+                if (gameObj instanceof LightCube) {
+                    key = "light"
+                    this.gl.useProgram(this.gpuInstancingProgram.program)
+                    this.gl.uniform3f(this.gpuInstancingProgram.lightPositionUniformLocation, gameObj.transform.position.x, gameObj.transform.position.y, gameObj.transform.position.z)
+                }
     
                 let batch = batches.get(key);
     
@@ -93,6 +99,7 @@ export default class GeometryPass implements Pass {
     instanceBatch(batch: GameObject[], viewMatrix: Matrix4){
         this.gl.vertexAttribDivisor(this.gpuInstancingProgram.colourAttributeLocation, 1);
         this.gl.vertexAttribDivisor(this.gpuInstancingProgram.textureIndexAttributeLocation, 1);
+        this.gl.vertexAttribDivisor(this.gpuInstancingProgram.normalAttributeLocation, 1);
 
         this.gl.useProgram(this.gpuInstancingProgram.program);
     
@@ -108,17 +115,19 @@ export default class GeometryPass implements Pass {
                 meshVertices.push(vertex.x)
                 meshVertices.push(vertex.y)
                 meshVertices.push(vertex.z)
+
             })
         })
 
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(meshVertices), this.gl.STATIC_DRAW);
 
         this.gpuInstancingProgram.setUniformMatrix(this.gpuInstancingProgram.viewMatrixUniformLocation, viewMatrix);
-        this.gl.uniform3f(this.gpuInstancingProgram.lightColourUniformLocation, 1.0, 1.0, 1.0)
+        this.gl.uniform3f(this.gpuInstancingProgram.lightColourUniformLocation, lightColour[0], lightColour[1], lightColour[2])
         
         const worldMatrices: Matrix4[] = [];
         const colours: number[] = [];
         const textureIndices: number[] = [];
+        const normals: number[] = []
 
         for (let batchIndex = 0; batchIndex < batch.length; batchIndex++){
             const currentGameObject = batch[batchIndex];
@@ -127,6 +136,13 @@ export default class GeometryPass implements Pass {
             worldMatrices.push(worldMatrix);
             colours.push(...currentGameObject.mesh.colour, 255);
             textureIndices.push(currentGameObject.texture)
+            
+            // calculate normals
+            // const normal = Matrix4.apply(worldMatrix, Vec3.toVec4(currentGameObject.normal));
+            const normal = Matrix3.apply(currentGameObject.transform.orientation, currentGameObject.normal);
+            normals.push(normal.x)
+            normals.push(normal.y)
+            normals.push(normal.z)
         }
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.worldMatrixBuffer)
@@ -157,6 +173,11 @@ export default class GeometryPass implements Pass {
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.textureIndexBuffer);
         this.gl.vertexAttribPointer(this.gpuInstancingProgram.textureIndexAttributeLocation, 1, this.gl.FLOAT, false, 0, 0);
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(textureIndices), this.gl.STATIC_DRAW);
+        
+        // set normals
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.gpuInstancingProgram.normalBuffer);
+        this.gl.vertexAttribPointer(this.gpuInstancingProgram.normalAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(normals), this.gl.STATIC_DRAW);
 
         this.gl.drawArraysInstanced(
             this.gl.TRIANGLES,
@@ -167,6 +188,7 @@ export default class GeometryPass implements Pass {
 
         this.gl.vertexAttribDivisor(this.gpuInstancingProgram.colourAttributeLocation, 0);
         this.gl.vertexAttribDivisor(this.gpuInstancingProgram.textureIndexAttributeLocation, 0);
+        this.gl.vertexAttribDivisor(this.gpuInstancingProgram.normalAttributeLocation, 0);
     }
 
     renderBatch(batch: GameObject[], viewMatrix: Matrix4){
