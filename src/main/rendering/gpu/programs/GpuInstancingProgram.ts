@@ -150,14 +150,13 @@ const gpuInstancingVertexShaderSource = `#version 300 es
     layout( location = 4 ) in mat4 worldMatrix;
     uniform mat4 viewMatrix;
     uniform mat4 projectionMatrix;
-    uniform vec3 lightColour;
 
     out lowp vec4 vColour;
     out highp vec3 vTextureCoord;
 
     void main() {
         gl_Position = projectionMatrix * viewMatrix * worldMatrix * aVertexPosition;
-        vColour = aVertexColour * vec4(lightColour, 1.0);
+        vColour = aVertexColour;
         if (int(aTextureIndex) == 2){
             vTextureCoord = vec3(vec2(0.25, 0.25) + 0.5 * aTextureCoord, aTextureIndex);
         }
@@ -175,11 +174,15 @@ const fragmentShaderSource = `#version 300 es
     in lowp vec4 vColour;
     in highp vec3 vTextureCoord;
 
+    uniform vec3 lightColour;
     uniform highp sampler2DArray uTexture;
 
     out vec4 fragColor;
     void main() {
-        fragColor = mix(vColour, texture(uTexture, vTextureCoord), 0.5);
+        float ambientStrength = 0.1;
+        vec3 ambient = ambientStrength * lightColour;
+        vec4 colour = vColour * vec4(ambient, 1.0);
+        fragColor = mix(colour, texture(uTexture, vTextureCoord), 0.0);
     }
 `;
 
