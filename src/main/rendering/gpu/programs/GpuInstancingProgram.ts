@@ -18,6 +18,7 @@ class GpuInstancingProgram {
 
     viewMatrixUniformLocation: WebGLUniformLocation;
     projectionMatrixUniformLocation: WebGLUniformLocation;
+    lightColourUniformLocation: WebGLUniformLocation;
 
     matrixData: Float32Array
     matrices: Float32Array[]
@@ -46,8 +47,10 @@ class GpuInstancingProgram {
 
         this.viewMatrixUniformLocation = this.gl.getUniformLocation(this.program, "viewMatrix");
         this.projectionMatrixUniformLocation = this.gl.getUniformLocation(this.program, "projectionMatrix");
+        this.lightColourUniformLocation = this.gl.getUniformLocation(this.program, "lightColour");
 
         this.setUniformMatrix(this.projectionMatrixUniformLocation, Transform.getProjectionMatrix(this.size))
+        this.gl.uniform3f(this.lightColourUniformLocation, 1.0, 1.0, 1.0)
         
         // position buffer
         this.positionBuffer = this.gl.createBuffer();
@@ -147,13 +150,14 @@ const gpuInstancingVertexShaderSource = `#version 300 es
     layout( location = 4 ) in mat4 worldMatrix;
     uniform mat4 viewMatrix;
     uniform mat4 projectionMatrix;
+    uniform vec3 lightColour;
 
     out lowp vec4 vColour;
     out highp vec3 vTextureCoord;
 
     void main() {
         gl_Position = projectionMatrix * viewMatrix * worldMatrix * aVertexPosition;
-        vColour = aVertexColour;
+        vColour = aVertexColour * vec4(lightColour, 1.0);
         if (int(aTextureIndex) == 2){
             vTextureCoord = vec3(vec2(0.25, 0.25) + 0.5 * aTextureCoord, aTextureIndex);
         }

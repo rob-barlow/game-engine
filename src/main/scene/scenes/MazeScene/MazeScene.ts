@@ -7,6 +7,7 @@ import { Scene } from "../../Scene";
 import { addPlayer } from "../Extensions";
 import { PostProcessingOptions } from "../../../rendering/gpu/PostProcessingOptions";
 import Texture from "../../../meshes/Textures/Textures";
+import LightCube from "../../game-objects/LightCube";
 
 export function createMazeScene(): {scene: Scene, controllers: Controller[]} {
     const mazeWidth = 10;
@@ -14,7 +15,7 @@ export function createMazeScene(): {scene: Scene, controllers: Controller[]} {
 
     const scene = new Scene();
     scene.postProcessingOptions = [
-        PostProcessingOptions.Flashlight,
+        // PostProcessingOptions.Flashlight,
         // PostProcessingOptions.Pixelation,
         // PostProcessingOptions.Grayscale,
         // PostProcessingOptions.Kernel
@@ -85,7 +86,7 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
                     scale: floorScale
                 }
                 const floorPanel = new Panel(floorTransform, floorColour);
-                floorPanel.texture = Texture.Carpet
+                floorPanel.texture = maze[rowIndex][columnIndex] == 3 ? Texture.Water : Texture.Carpet
                 flatPanels.push(floorPanel);
 
                 const ceilingTransform: Transform = {
@@ -154,6 +155,16 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
             if (maze[rowIndex][columnIndex] == 2){
                 startPositionX = 2 * rowIndex + 1
                 startPositionZ = 2 * columnIndex + 1
+
+                // add light cube here
+                const transform: Transform = {
+                    position: {x: 2 * rowIndex + 1/2, y: 1, z: 2 * columnIndex + 1/2},
+                    orientation: Matrix3.identity(),
+                    scale: {x: 1, y: 1, z: 1}
+                }
+
+                const lightSource = new LightCube(transform)
+                scene.add(lightSource)
             }
 
             // add finishing square

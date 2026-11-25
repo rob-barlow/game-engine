@@ -12,6 +12,8 @@ import RegularProgram from "../programs/RegularProgram";
 import { CanvasSize } from "../../../utils/types";
 import AssetManager from "../../../app/AssetManager";
 import Texture from "../../../meshes/Textures/Textures";
+import LightCube from "../../../scene/game-objects/LightCube";
+import LightSourceProgram from "../programs/LightSourceProgram";
 
 const gpuInstancingBoundary = 9;
 
@@ -22,6 +24,7 @@ export default class GeometryPass implements Pass {
     
     gpuInstancingProgram: GpuInstancingProgram;
     regularProgram: RegularProgram;
+    lightSourceProgram: LightSourceProgram;
 
     textureArray: WebGLTexture;
 
@@ -32,6 +35,7 @@ export default class GeometryPass implements Pass {
 
         this.gpuInstancingProgram = new GpuInstancingProgram(this.gl, this.size);
         this.regularProgram = new RegularProgram(this.gl, this.size);
+        this.lightSourceProgram = new LightSourceProgram(this.gl, this.size);
         
         this.gl.useProgram(this.gpuInstancingProgram.program)
         
@@ -74,7 +78,10 @@ export default class GeometryPass implements Pass {
             }
     
             for (const batch of batches.values()) {
-                if (batch.length > gpuInstancingBoundary){
+                if (batch[0] instanceof LightCube){
+                    this.renderLightSource(batch, viewMatrix);
+                }
+                else if (batch.length > gpuInstancingBoundary){
                     this.instanceBatch(batch, viewMatrix);
                 }
                 else {
@@ -107,8 +114,8 @@ export default class GeometryPass implements Pass {
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(meshVertices), this.gl.STATIC_DRAW);
 
         this.gpuInstancingProgram.setUniformMatrix(this.gpuInstancingProgram.viewMatrixUniformLocation, viewMatrix);
+        this.gl.uniform3f(this.gpuInstancingProgram.lightColourUniformLocation, 1.0, 1.0, 1.0)
         
-
         const worldMatrices: Matrix4[] = [];
         const colours: number[] = [];
         const textureIndices: number[] = [];
@@ -175,6 +182,32 @@ export default class GeometryPass implements Pass {
             const worldMatrix = Transform.getWorldMatrix(gameObj.transform)
             this.gl.uniform3fv(this.regularProgram.colourUniformLocation, gameObj.mesh!.colour.map(v => v/255));
             this.gl.uniformMatrix4fv(this.regularProgram.worldMatrixUniformLocation, false, Matrix4.toGlslArray(worldMatrix))
+            
+            for (const triangle of gameObj.mesh!.triangles){
+                for (const vertex of triangle){
+                    vertices.push(vertex.x, vertex.y, vertex.z)
+                }
+            }
+            
+            this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.DYNAMIC_DRAW)
+            this.gl.drawArrays(this.gl.TRIANGLES, 0, vertices.length/3)
+            vertices.length = 0;
+        }
+    }
+
+    renderLightSource(batch: GameObject[], viewMatrix: Matrix4){
+        this.gl.useProgram(this.lightSourceProgram.program);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.lightSourceProgram.positionBuffer);
+        this.gl.vertexAttribPointer(this.lightSourceProgram.positionAttributeLocation, 3, this.gl.FLOAT, false, 0, 0);
+
+        this.gl.uniformMatrix4fv(this.lightSourceProgram.viewMatrixUniformLocation, false, Matrix4.toGlslArray(viewMatrix))
+                
+        const vertices: number[] = []
+        
+        for (const gameObj of batch){
+            const worldMatrix = Transform.getWorldMatrix(gameObj.transform)
+            this.gl.uniform3fv(this.lightSourceProgram.colourUniformLocation, gameObj.mesh!.colour.map(v => v/255));
+            this.gl.uniformMatrix4fv(this.lightSourceProgram.worldMatrixUniformLocation, false, Matrix4.toGlslArray(worldMatrix))
             
             for (const triangle of gameObj.mesh!.triangles){
                 for (const vertex of triangle){
