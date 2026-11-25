@@ -4,7 +4,7 @@ export default class AssetManager {
     imageMap: Map<string, HTMLImageElement>
     textures: Map<Texture, WebGLTexture> = new Map<Texture, WebGLTexture>()
 
-    textureUrls = ["./cave-wall.webp", "./water.webp", "./ceiling-tiles.webp", "./brick-wall.webp"];
+    textureUrls = ["./cave-wall.webp", "./water.webp", "./ceiling-tiles.webp", "./brick-wall.webp", "./carpet.webp"];
 
     constructor(){
         this.load();
@@ -85,6 +85,9 @@ export default class AssetManager {
 
         const brickTexture = this.loadTexture(gl, "./brick-wall.webp");
         this.textures.set(Texture.Brick, brickTexture);
+
+        const carpetTexture = this.loadTexture(gl, "./brick-wall.webp");
+        this.textures.set(Texture.Carpet, carpetTexture);
 
         // Plain texture stuff
         const plainTexture = gl.createTexture();

@@ -15,8 +15,8 @@ export function createMazeScene(): {scene: Scene, controllers: Controller[]} {
     const scene = new Scene();
     scene.postProcessingOptions = [
         PostProcessingOptions.Flashlight,
-        PostProcessingOptions.Pixelation,
-        PostProcessingOptions.Grayscale,
+        // PostProcessingOptions.Pixelation,
+        // PostProcessingOptions.Grayscale,
         // PostProcessingOptions.Kernel
     ]
 
@@ -34,7 +34,6 @@ const leftWallColour: [number, number, number] = [255,255,255]
 const rightWallColour: [number, number, number] = [255,255,255]
 const frontWallColour: [number, number, number] = [255,255,255]
 const backWallColour: [number, number, number] = [255,255,255]
-
 
 // const leftWallColour: [number, number, number] = [0,0,255]
 // const rightWallColour: [number, number, number] = [0,255, 0]
@@ -86,7 +85,7 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
                     scale: floorScale
                 }
                 const floorPanel = new Panel(floorTransform, floorColour);
-                floorPanel.texture = Texture.CaveWall
+                floorPanel.texture = Texture.Carpet
                 flatPanels.push(floorPanel);
 
                 const ceilingTransform: Transform = {
@@ -171,7 +170,7 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
     }
 
     panels.forEach(panel => {
-        panel.texture = Texture.Water
+        panel.texture = Texture.Plain
         scene.add(panel)
     })
 

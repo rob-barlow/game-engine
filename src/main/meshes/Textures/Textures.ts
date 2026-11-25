@@ -3,6 +3,7 @@ enum Texture {
     CaveWall,
     Ceiling,
     Brick,
+    Carpet,
     Plain
 }
 

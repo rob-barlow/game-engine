@@ -201,8 +201,9 @@ export default class GeometryPass implements Pass {
         const panelImage = this.assetManager.imageMap.get("./ceiling-tiles.webp")
         const caveWallImage = this.assetManager.imageMap.get("./cave-wall.webp")
         const brickWallImage = this.assetManager.imageMap.get("./brick-wall.webp")
+        const carpetImage = this.assetManager.imageMap.get("./carpet.webp")
         
-        const numOfTextures = 5;
+        const numOfTextures = 6;
 
         // allocate storage
         this.gl.texStorage3D( this.gl.TEXTURE_2D_ARRAY , 1 , this.gl.RGBA8 , waterImage.width , waterImage.height , numOfTextures);
@@ -234,10 +235,16 @@ export default class GeometryPass implements Pass {
                     brickWallImage.width , waterImage.height , 1 , this.gl.RGBA , this.gl.UNSIGNED_BYTE , 
                     brickWallBuffer , 0); 
 
+        const carpetIndex = Texture.Carpet
+        const carpetBuffer = this.getImageData(carpetImage)
+        this.gl.texSubImage3D( this.gl.TEXTURE_2D_ARRAY , 0 , 0 , 0 , carpetIndex, 
+                    carpetImage.width , waterImage.height , 1 , this.gl.RGBA , this.gl.UNSIGNED_BYTE , 
+                    carpetBuffer , 0); 
+
         const plainIndex = Texture.Plain
         let canvas = new OffscreenCanvas( waterImage.width , waterImage.height );
         let ctx = canvas.getContext( "2d" );
-        ctx.fillStyle = "grey"
+        ctx.fillStyle = "#E8E8E8"
         ctx.fillRect(0 , 0 , canvas.width , canvas.height)
         let plainBuffer = ctx.getImageData( 0 , 0 , canvas.width , canvas.height ).data;
         this.gl.texSubImage3D( this.gl.TEXTURE_2D_ARRAY , 0 , 0 , 0 , plainIndex, 
