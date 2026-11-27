@@ -166,16 +166,15 @@ const gpuInstancingVertexShaderSource = `#version 300 es
 
     out lowp vec4 vColour;
     out highp vec3 vTextureCoord;
-    out highp float vNormalDot;
+    out highp vec3 vNormal;
+    out highp vec3 vLightDirection;
 
     void main() {
         gl_Position = projectionMatrix * viewMatrix * worldMatrix * aVertexPosition;
         vColour = aVertexColour;
-        vec3 lightDirection = lightPosition - vec3(worldMatrix * aVertexPosition);
-        float lightDistance = length(lightDirection);
-        float lightStrength = 2.0 / (lightDistance * lightDistance);
-        vNormalDot = dot(normalize(lightDirection), aNormal)  * lightStrength;
         
+        vLightDirection = lightPosition - vec3(worldMatrix * aVertexPosition);
+        vNormal = aNormal;
         vTextureCoord = vec3(aTextureCoord, aTextureIndex);
     }
 `;
@@ -186,19 +185,32 @@ const fragmentShaderSource = `#version 300 es
 
     in lowp vec4 vColour;
     in highp vec3 vTextureCoord;
-    in highp float vNormalDot;
+    in highp vec3 vNormal;
+    in highp vec3 vLightDirection;
 
     uniform vec3 lightColour;
     uniform highp sampler2DArray uTexture;
-
+    
     out vec4 fragColor;
-    void main() {
+
+    vec4 addLighting(in vec4 colour) {
         float ambientStrength = 0.1;
-        float actualStrength = vNormalDot > 0.0 ? mix(ambientStrength, 1.0, vNormalDot) : ambientStrength;
+
+        float lightStrength = 1.0;
+        float lightDistance = length(vLightDirection);
+        float normalDot = dot(normalize(vLightDirection), vNormal) * lightStrength;
+        normalDot = normalDot / ((lightDistance + 1.0) * (lightDistance + 1.0));
+
+        float actualStrength = normalDot > 0.0 ? mix(ambientStrength, 1.0, normalDot) : ambientStrength;
 
         vec4 ambient = vec4(actualStrength * lightColour, 1.0);
-        vec4 colour = vColour * ambient;
-        fragColor = mix(colour, texture(uTexture, vTextureCoord), 0.0);
+
+        return  colour * ambient;
+    }
+
+    void main() {
+        vec4 colour = mix(vColour, texture(uTexture, vTextureCoord), 1.0);
+        fragColor = addLighting(colour);
     }
 `;
 

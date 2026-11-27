@@ -15,7 +15,7 @@ export function createMazeScene(): {scene: Scene, controllers: Controller[]} {
 
     const scene = new Scene();
     scene.postProcessingOptions = [
-        // PostProcessingOptions.Flashlight,
+        PostProcessingOptions.Flashlight,
         // PostProcessingOptions.Pixelation,
         // PostProcessingOptions.Grayscale,
         // PostProcessingOptions.Kernel
@@ -79,6 +79,8 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
         for (let columnIndex = 0; columnIndex < maze[rowIndex].length; columnIndex++){
             // x = row, z = column
             if (maze[rowIndex][columnIndex] == 0 || maze[rowIndex][columnIndex] == 2 || maze[rowIndex][columnIndex] == 3){
+                let numOfWalls = 0;
+
                 // add wall between this and all 1s
                 const floorTransform: Transform = {
                     position: {x: 2 * rowIndex, y: 0, z: 2 * columnIndex},
@@ -107,6 +109,7 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
                     }
                     const panel = new Panel(transform, leftWallColour);
                     panels.push(panel)
+                    numOfWalls++;
                 }
                 // right wall
                 if (maze[rowIndex + 1][columnIndex] == 1){
@@ -117,6 +120,7 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
                     }
                     const panel = new Panel(transform, rightWallColour);
                     panels.push(panel)
+                    numOfWalls++;
                 }
                 // front wall
                 if (maze[rowIndex][columnIndex - 1] == 1){
@@ -127,6 +131,7 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
                     }
                     const panel = new Panel(transform, frontWallColour);
                     panels.push(panel)
+                    numOfWalls++;
                 }
                 // back wall
                 if (maze[rowIndex][columnIndex + 1] == 1){
@@ -137,6 +142,19 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
                     }
                     const panel = new Panel(transform, backWallColour);
                     panels.push(panel)
+                    numOfWalls++;
+                }
+
+                if (numOfWalls < 2){
+                    // add light cube here
+                    const transform: Transform = {
+                        position: {x: 2 * rowIndex + 1, y: 4.45, z: 2 * columnIndex + 1},
+                        orientation: Matrix3.identity(),
+                        scale: {x: 1, y: 1, z: 1}
+                    }
+
+                    const lightSource = new LightCube(transform)
+                    scene.add(lightSource)
                 }
             }
 
@@ -155,16 +173,6 @@ function addMaze(scene: Scene, mazeWidth: number, mazeHeight: number){
             if (maze[rowIndex][columnIndex] == 2){
                 startPositionX = 2 * rowIndex + 1
                 startPositionZ = 2 * columnIndex + 1
-
-                // add light cube here
-                const transform: Transform = {
-                    position: {x: 2 * rowIndex + 1, y: 1.5, z: 2 * columnIndex + 1},
-                    orientation: Matrix3.identity(),
-                    scale: {x: 1, y: 1, z: 1}
-                }
-
-                const lightSource = new LightCube(transform)
-                scene.add(lightSource)
             }
 
             // add finishing square

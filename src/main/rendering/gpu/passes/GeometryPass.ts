@@ -17,6 +17,7 @@ import LightSourceProgram from "../programs/LightSourceProgram";
 
 const gpuInstancingBoundary = 9;
 const lightColour = [1,1,1]
+// const lightColour = [1,69/255,0]
 
 export default class GeometryPass implements Pass {
     size: CanvasSize;
@@ -138,7 +139,6 @@ export default class GeometryPass implements Pass {
             textureIndices.push(currentGameObject.texture)
             
             // calculate normals
-            // const normal = Matrix4.apply(worldMatrix, Vec3.toVec4(currentGameObject.normal));
             const normal = Matrix3.apply(currentGameObject.transform.orientation, currentGameObject.normal);
             normals.push(normal.x)
             normals.push(normal.y)
