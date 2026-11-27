@@ -125,7 +125,14 @@ export default class PlayerMovementSystem implements MovementSystem {
     rotate(target: GameObject, intent: Intent, dt: number){
         if (intent.yaw != 0){
             let angle: number = dt * CameraRotationSpeed * intent.yaw;
-            target.transform.orientation = Matrix3.multiply(Matrix3.getRotationMatrix('y', angle), target.transform.orientation)
+            
+            const rotationMatrix: Matrix3 = [
+                [Math.cos(angle), 0, Math.sin(angle)],
+                [0, 1, 0],
+                [-Math.sin(angle), 0, Math.cos(angle)]
+            ]
+            
+            target.transform.orientation = Matrix3.multiply(rotationMatrix, target.transform.orientation)
         }
 
         if (intent.pitch != 0){
@@ -150,8 +157,8 @@ export default class PlayerMovementSystem implements MovementSystem {
 
             if (yNewVector.y < 0) {
                 yNewVector.y = 0;
-                // zNewVector = {x: 0, y: -1, z: 0}
-                zNewVector = zLocalVector
+                yNewVector = Vec3.normalise(yNewVector);
+                zNewVector = intent.pitch < 0 ? {x: 0, y: 1, z: 0} : {x: 0, y: -1, z: 0};
             }
 
             target.transform.orientation = [
@@ -160,5 +167,7 @@ export default class PlayerMovementSystem implements MovementSystem {
                 [xLocalVector.z, yNewVector.z, zNewVector.z]
             ]
         }
+
+        // target.transform.orientation
     }
 }
